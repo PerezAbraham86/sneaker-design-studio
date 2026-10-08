@@ -2,8 +2,8 @@ import type {PanelId} from './shoeTemplate'
 import type {ShoeView} from './project'
 export type SurfaceMaterial='leather'|'textile'|'rubber'|'mesh'|'synthetic'
 export type ModelPart={id:string;panelId:PanelId;label:string;material:SurfaceMaterial;customizable:boolean;views:ShoeView[];futureMeshName:string}
-export type ModelManifest={schema:'sneaker-design-studio-model';version:1;modelId:string;coordinateSystem:{width:number;height:number;units:'design'};parts:ModelPart[]}
-export const LOW_TOP_MODEL_MANIFEST:ModelManifest={schema:'sneaker-design-studio-model',version:1,modelId:'classic-low-top',coordinateSystem:{width:800,height:430,units:'design'},parts:[
+export type ModelManifest={schema:'sneaker-design-studio-model';version:1;modelId:string;asset:{format:'glb';publicPath:string;licenseRequired:true;fallback:'procedural'};coordinateSystem:{width:number;height:number;units:'design'};parts:ModelPart[]}
+export const LOW_TOP_MODEL_MANIFEST:ModelManifest={schema:'sneaker-design-studio-model',version:1,modelId:'classic-low-top',asset:{format:'glb',publicPath:'/models/classic-low-top.glb',licenseRequired:true,fallback:'procedural'},coordinateSystem:{width:800,height:430,units:'design'},parts:[
 {id:'upper.toe-box',panelId:'toeBox',label:'Toe box / vamp',material:'leather',customizable:true,views:['outer','inner','top','front'],futureMeshName:'upper_toe_box'},
 {id:'upper.toe-guard',panelId:'toeGuard',label:'Toe guard / tip',material:'leather',customizable:true,views:['outer','inner','top','front'],futureMeshName:'upper_toe_guard'},
 {id:'upper.quarter',panelId:'quarter',label:'Quarter / side panel',material:'leather',customizable:true,views:['outer','inner','top','heel'],futureMeshName:'upper_quarter'},
