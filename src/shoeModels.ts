@@ -77,9 +77,45 @@ export const CLASSIC_HIGH_TOP:ShoeModel={
  views:{outer:highOuter,inner:{...highOuter,mirror:true},top:highTop,front:highFront,heel:highHeel}
 }
 
+
+const slipSide:ShoeViewTemplate={viewBox:'55 70 735 335',paths:{
+ heel:'M92 247 C96 176 123 126 181 102 L246 125 L238 273 L104 294 Z',
+ collar:'M170 111 C207 84 275 85 326 116 L292 154 L213 151 Z',
+ quarter:'M222 145 L445 137 C505 141 552 172 580 220 L530 289 L224 282 Z',
+ toeBox:panelPaths.toeBox,toeGuard:panelPaths.toeGuard,midsole:panelPaths.midsole,outsole:panelPaths.outsole
+},details:['M252 151 C310 172 363 174 423 150']}
+
+const slipTop:ShoeViewTemplate={viewBox:'0 0 800 430',paths:{
+ outsole:dedicatedViews.top.paths.outsole!,midsole:dedicatedViews.top.paths.midsole!,
+ heel:'M286 72 C335 45 465 45 514 72 L493 132 C449 114 351 114 307 132 Z',
+ collar:'M307 111 C344 91 456 91 493 111 L473 170 C435 153 365 153 327 170 Z',
+ quarter:'M314 155 C350 139 450 139 486 155 L500 283 C458 303 342 303 300 283 Z',
+ toeGuard:dedicatedViews.top.paths.toeGuard!,toeBox:dedicatedViews.top.paths.toeBox!
+},details:['M329 176 C370 194 430 194 471 176']}
+
+const slipFront:ShoeViewTemplate={viewBox:'0 0 800 430',paths:{
+ outsole:dedicatedViews.front.paths.outsole!,midsole:dedicatedViews.front.paths.midsole!,toeGuard:dedicatedViews.front.paths.toeGuard!,toeBox:dedicatedViews.front.paths.toeBox!,
+ quarter:'M312 103 C349 78 451 78 488 103 L474 222 C435 241 365 241 326 222 Z',
+ collar:'M326 80 C358 59 442 59 474 80 L457 119 C426 105 374 105 343 119 Z'
+},details:['M334 133 C371 149 429 149 466 133']}
+
+const slipHeel:ShoeViewTemplate={viewBox:'0 0 800 430',paths:{
+ outsole:dedicatedViews.heel.paths.outsole!,midsole:dedicatedViews.heel.paths.midsole!,
+ heel:'M277 120 C310 84 490 84 523 120 L541 292 C497 317 303 317 259 292 Z',
+ collar:'M301 82 C337 53 463 53 499 82 L477 126 C442 109 358 109 323 126 Z',
+ quarter:'M259 146 C278 117 302 104 329 103 L305 286 L259 292 Z M541 146 C522 117 498 104 471 103 L495 286 L541 292 Z'
+},details:['M400 118 L400 291']}
+export const CLASSIC_SLIP_ON:ShoeModel={
+ id:'classic-slip-on',name:'Classic Slip-On',category:'slip-on',version:1,
+ description:'Generic laceless slip-on anatomy with simplified vamp, collar, and side construction.',
+ panelLabels,initialColors,
+ views:{outer:slipSide,inner:{...slipSide,mirror:true},top:slipTop,front:slipFront,heel:slipHeel}
+}
+
 export const SHOE_MODELS:Record<string,ShoeModel>={
  [CLASSIC_LOW_TOP.id]:CLASSIC_LOW_TOP,
  [CLASSIC_HIGH_TOP.id]:CLASSIC_HIGH_TOP,
+ [CLASSIC_SLIP_ON.id]:CLASSIC_SLIP_ON,
 }
 
 export const DEFAULT_SHOE_MODEL_ID=CLASSIC_LOW_TOP.id
