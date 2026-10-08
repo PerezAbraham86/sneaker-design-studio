@@ -14,6 +14,8 @@ export type ShoeModel={
  name:string
  category:'low-top'|'high-top'|'slip-on'
  version:number
+ fidelity:'prototype'|'refined'
+ coordinateSystem:{width:number;height:number;units:'design'}
  description:string
  panelLabels:Record<PanelId,string>
  initialColors:PanelColors
@@ -26,8 +28,9 @@ export const CLASSIC_LOW_TOP:ShoeModel={
  id:'classic-low-top',
  name:'Classic Low-Top',
  category:'low-top',
- version:1,
- description:'Panel-based low-top prototype for custom artwork and paint planning.',
+ version:2,
+ fidelity:'refined',coordinateSystem:{width:800,height:430,units:'design'},
+ description:'Refined panel-based low-top template for custom artwork and paint planning.',
  panelLabels,
  initialColors,
  views:{
@@ -71,7 +74,8 @@ const highHeel: ShoeViewTemplate={viewBox:'0 0 800 430',paths:{
 },details:['M400 105 L400 292','M320 142 C363 124 437 124 480 142']}
 
 export const CLASSIC_HIGH_TOP:ShoeModel={
- id:'classic-high-top',name:'Classic High-Top',category:'high-top',version:1,
+ id:'classic-high-top',name:'Classic High-Top',category:'high-top',version:2,
+ fidelity:'refined',coordinateSystem:{width:800,height:430,units:'design'},
  description:'Generic high-top sneaker anatomy with extended ankle, collar, tongue, and eyestay areas.',
  panelLabels,initialColors,
  views:{outer:highOuter,inner:{...highOuter,mirror:true},top:highTop,front:highFront,heel:highHeel}
@@ -106,7 +110,8 @@ const slipHeel:ShoeViewTemplate={viewBox:'0 0 800 430',paths:{
  quarter:'M259 146 C278 117 302 104 329 103 L305 286 L259 292 Z M541 146 C522 117 498 104 471 103 L495 286 L541 292 Z'
 },details:['M400 118 L400 291']}
 export const CLASSIC_SLIP_ON:ShoeModel={
- id:'classic-slip-on',name:'Classic Slip-On',category:'slip-on',version:1,
+ id:'classic-slip-on',name:'Classic Slip-On',category:'slip-on',version:2,
+ fidelity:'refined',coordinateSystem:{width:800,height:430,units:'design'},
  description:'Generic laceless slip-on anatomy with simplified vamp, collar, and side construction.',
  panelLabels,initialColors,
  views:{outer:slipSide,inner:{...slipSide,mirror:true},top:slipTop,front:slipFront,heel:slipHeel}
