@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import type { PanelId } from './shoeTemplate'
 
 export type ArtworkItem = {
   id: string
@@ -9,6 +10,7 @@ export type ArtworkItem = {
   scale: number
   rotation: number
   opacity: number
+  clipPanel?: PanelId | null
 }
 
 type Props = {
@@ -16,16 +18,17 @@ type Props = {
   selectedId: string | null
   onSelect: (id: string) => void
   onChange: (id: string, patch: Partial<ArtworkItem>) => void
+  clipPaths?: Partial<Record<PanelId,string>>
 }
 
-export default function ArtworkLayer({ items, selectedId, onSelect, onChange }: Props) {
+export default function ArtworkLayer({ items, selectedId, onSelect, onChange, clipPaths }: Props) {
   const drag = useRef<{ id: string; startX: number; startY: number; x: number; y: number } | null>(null)
 
   return (
     <div className="artwork-layer">
       {items.map((item) => (
+        <div key={item.id} className="artwork-clip" style={item.clipPanel&&clipPaths?.[item.clipPanel]?{clipPath:`path('${clipPaths[item.clipPanel]}')`}:undefined}>
         <img
-          key={item.id}
           src={item.src}
           alt={item.name}
           className={'artwork-item' + (selectedId === item.id ? ' selected' : '')}
@@ -53,6 +56,7 @@ export default function ArtworkLayer({ items, selectedId, onSelect, onChange }: 
           }}
           onPointerUp={() => { drag.current = null }}
         />
+        </div>
       ))}
     </div>
   )
