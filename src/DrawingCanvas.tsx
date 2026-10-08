@@ -3,7 +3,8 @@ import type { PanelId } from './shoeTemplate'
 
 export type DrawTool = 'brush' | 'airbrush' | 'eraser'
 export type StrokePoint = { x:number; y:number }
-export type PaintMaterial='solid'|'pearl'|'metallic'|'interference'|'chameleon'\nexport type Stroke = { id:string; tool:DrawTool; color:string; size:number; opacity:number; points:StrokePoint[]; clipPanel?:PanelId|null; material?:PaintMaterial }
+export type PaintMaterial='solid'|'pearl'|'metallic'|'interference'|'chameleon'
+export type Stroke = { id:string; tool:DrawTool; color:string; size:number; opacity:number; points:StrokePoint[]; clipPanel?:PanelId|null; material?:PaintMaterial }
 
 type Props={tool:DrawTool;color:string;size:number;opacity:number;strokes:Stroke[];clipPanel?:PanelId|null;material?:PaintMaterial;clipPaths?:Partial<Record<PanelId,string>>;viewBox?:string;mirror?:boolean;onCommit:(stroke:Stroke)=>void}
 
