@@ -55,11 +55,21 @@ export default function ArtworkLayer({ items, selectedId, onSelect, onChange, cl
             const d = item.clipPanel ? clipPaths?.[item.clipPanel] : undefined
             if (!d) return null
             return (
-              <clipPath key={item.id} id={'artwork-mask-' + item.id} clipPathUnits="userSpaceOnUse">
+              <mask
+                key={item.id}
+                id={'artwork-mask-' + item.id}
+                maskUnits="userSpaceOnUse"
+                maskContentUnits="userSpaceOnUse"
+                x="0"
+                y="0"
+                width={stageWidth}
+                height={stageHeight}
+              >
+                <rect x="0" y="0" width={stageWidth} height={stageHeight} fill="black" />
                 <g transform={maskTransform}>
-                  <path d={d} />
+                  <path d={d} fill="white" />
                 </g>
-              </clipPath>
+              </mask>
             )
           })}
         </defs>
@@ -80,7 +90,7 @@ export default function ArtworkLayer({ items, selectedId, onSelect, onChange, cl
               height={height}
               opacity={item.opacity}
               preserveAspectRatio="xMidYMid meet"
-              clipPath={'url(#artwork-mask-' + item.id + ')'}
+              mask={'url(#artwork-mask-' + item.id + ')'}
               transform={'rotate(' + item.rotation + ' ' + x + ' ' + y + ')'}
             />
           )
