@@ -2,7 +2,8 @@ import {useEffect,useRef,useState} from 'react'
 import {manifestForModel} from './modelManifest'
 import type {PanelColors,PanelId} from './shoeTemplate'
 
-type Material='solid'|'pearl'|'metallic'|'interference'|'chameleon'\ntype Props={modelId:string;colors:PanelColors;selected:PanelId;material:Material;onSelect:(panel:PanelId)=>void}
+type Material='solid'|'pearl'|'metallic'|'interference'|'chameleon'
+type Props={modelId:string;colors:PanelColors;selected:PanelId;material:Material;onSelect:(panel:PanelId)=>void}
 type Part={id:PanelId;vertices:number[];normals:number[];indices:number[]}
 const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v))
 function makeSurface(id:PanelId,fn:(u:number,v:number)=>[number,number,number],nu=18,nv=12):Part{
