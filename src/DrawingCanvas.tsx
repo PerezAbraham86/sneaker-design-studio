@@ -1,4 +1,5 @@
-import { useRef } from 'react'\nimport type { PanelId } from './shoeTemplate'
+import { useRef } from 'react'
+import type { PanelId } from './shoeTemplate'
 
 export type DrawTool = 'brush' | 'airbrush' | 'eraser'
 export type StrokePoint = { x:number; y:number }
