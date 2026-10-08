@@ -31,13 +31,22 @@ const parseViewBox = (value = '0 0 800 430') => {
 export default function ArtworkLayer({ items, selectedId, onSelect, onChange, clipPaths, viewBox, mirror }: Props) {
   const drag = useRef<{ id: string; startX: number; startY: number; x: number; y: number } | null>(null)
   const vb = parseViewBox(viewBox)
-  const maskTransform = mirror ? `translate(${vb.minX * 2 + vb.width} 0) scale(-1 1)` : undefined
+  // Artwork positions are stored in the CSS design-stage coordinate system.
+  // Render clipped artwork in that same 735x350 coordinate space, then map only
+  // the panel mask from the shoe SVG viewBox into stage coordinates.
+  const stageWidth = 735
+  const stageHeight = 350
+  const scaleX = stageWidth / vb.width
+  const scaleY = stageHeight / vb.height
+  const maskTransform = mirror
+    ? `translate(${stageWidth} 0) scale(-1 1) translate(${-vb.minX} ${-vb.minY}) scale(${scaleX} ${scaleY})`
+    : `translate(${-vb.minX * scaleX} ${-vb.minY * scaleY}) scale(${scaleX} ${scaleY})`
 
   return (
     <div className="artwork-layer">
       <svg
         className="artwork-mask-svg"
-        viewBox={viewBox ?? '0 0 800 430'}
+        viewBox={`0 0 ${stageWidth} ${stageHeight}`}
         preserveAspectRatio="xMidYMid meet"
         aria-hidden="true"
       >
@@ -57,10 +66,10 @@ export default function ArtworkLayer({ items, selectedId, onSelect, onChange, cl
         {items.map((item) => {
           const d = item.clipPanel ? clipPaths?.[item.clipPanel] : undefined
           if (!d) return null
-          const width = vb.width * 0.28 * item.scale
-          const height = vb.height * 0.45 * item.scale
-          const x = vb.minX + (item.x / 100) * vb.width
-          const y = vb.minY + (item.y / 100) * vb.height
+          const width = stageWidth * 0.28 * item.scale
+          const height = stageHeight * 0.45 * item.scale
+          const x = (item.x / 100) * stageWidth
+          const y = (item.y / 100) * stageHeight
           return (
             <image
               key={item.id}
