@@ -31,6 +31,7 @@ const parseViewBox = (value = '0 0 800 430') => {
 export default function ArtworkLayer({ items, selectedId, onSelect, onChange, clipPaths, viewBox, mirror }: Props) {
   const drag = useRef<{ id: string; startX: number; startY: number; x: number; y: number } | null>(null)
   const vb = parseViewBox(viewBox)
+  const maskTransform = mirror ? `translate(${vb.minX * 2 + vb.width} 0) scale(-1 1)` : undefined
 
   return (
     <div className="artwork-layer">
@@ -46,7 +47,7 @@ export default function ArtworkLayer({ items, selectedId, onSelect, onChange, cl
             if (!d) return null
             return (
               <clipPath key={item.id} id={'artwork-mask-' + item.id} clipPathUnits="userSpaceOnUse">
-                <g transform={mirror ? 'translate(845 0) scale(-1 1)' : undefined}>
+                <g transform={maskTransform}>
                   <path d={d} />
                 </g>
               </clipPath>
