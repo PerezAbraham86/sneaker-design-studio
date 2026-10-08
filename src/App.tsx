@@ -2,7 +2,7 @@ import {useRef,useState} from 'react'
 import DrawingCanvas,{type DrawTool,type Stroke} from './DrawingCanvas'
 import ArtworkLayer,{type ArtworkItem} from './ArtworkLayer'
 import {DEFAULT_LAYERS,SHOE_VIEWS,VIEW_LABELS,downloadProject,isProjectFile,loadLocal,makeProject,saveLocal,type LayerId,type LayerState,type ProjectFile,type ShoeView,type ViewDocument} from './project'
-import {initialColors,panelLabels,panelPaths,type PanelColors,type PanelId} from './shoeTemplate'
+import {initialColors,panelLabels,type PanelColors,type PanelId} from './shoeTemplate'
 import {DEFAULT_SHOE_MODEL_ID,getShoeModel,modelPanels} from './shoeModels'
 type Mode='panels'|'draw'|'image'|'layers'|'project';const panelOrder=Object.keys(panelLabels) as PanelId[]
 const freshView=():ViewDocument=>({colors:{...initialColors},artworks:[],strokes:[]})
