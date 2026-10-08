@@ -17,3 +17,16 @@
 /* Phase 1J true SVG panel masks */
 .artwork-mask-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 .artwork-item.clipped-control{opacity:0!important;pointer-events:auto}
+
+/* Phase 1M: independent WebGL preview. Existing 2D editor layout is unchanged. */
+.preview-toggle{display:flex;gap:8px;margin:10px 0}
+.preview-toggle button{border:1px solid #d4d4d0;background:white;padding:9px 16px;border-radius:9px;font-weight:700;cursor:pointer}
+.preview-toggle button.active{background:#171717;color:white;border-color:#171717}
+.preview-3d{position:relative;width:100%;height:430px;min-height:340px;overflow:hidden;border-radius:12px;background:#eff2f4}
+.preview-3d canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.preview-3d canvas:active{cursor:grabbing}
+.preview-3d-controls{position:absolute;top:12px;right:12px;display:flex;gap:6px}
+.preview-3d-controls button{border:1px solid #cfd2d5;border-radius:8px;background:rgba(255,255,255,.94);padding:7px 10px;cursor:pointer}
+.preview-3d-note{position:absolute;bottom:5px;left:10px;right:10px;font-size:11px;color:#40464a;background:rgba(255,255,255,.84);padding:7px;border-radius:7px;text-align:center;pointer-events:none}
+.preview-3d-empty{min-height:350px;display:grid;place-items:center;padding:24px;text-align:center;color:#555}
+@media(max-width:700px){.preview-3d{height:360px}}
