@@ -10,3 +10,6 @@
 .model-picker select{font:inherit;padding:8px 34px 8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff}
 .model-picker span{font-size:13px;color:var(--muted);text-transform:capitalize}
 @media(max-width:700px){.model-picker{align-items:stretch;flex-direction:column}.model-picker label{justify-content:space-between}.model-picker select{max-width:65%}}
+
+/* Phase 1J panel clipping */
+.artwork-clip{position:absolute;inset:0;pointer-events:none}.artwork-clip .artwork-item{pointer-events:auto}.project-name select{min-height:44px;border:1px solid #cfcfc8;border-radius:9px;padding:0 10px;background:#fff}
