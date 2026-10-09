@@ -22,15 +22,15 @@ export type ShoeModel={
  views:Record<ShoeView,ShoeViewTemplate>
 }
 
-const side: ShoeViewTemplate={viewBox:'55 45 735 355',paths:panelPaths,details:['M114 276 C222 282 347 285 485 280','M184 91 C207 84 229 84 250 89','M278 142 L335 131','M286 160 L344 148','M296 179 L352 167','M306 198 L360 186','M525 175 C571 175 617 188 653 211','M548 267 C601 261 655 263 701 274','M155 349 C292 352 473 354 650 355']}
+const side: ShoeViewTemplate={viewBox:'55 45 735 355',paths:panelPaths,details:['M112 281 C225 288 350 290 470 286','M175 105 C202 92 231 89 260 95','M278 139 L333 128','M285 157 L341 146','M293 176 L350 165','M301 195 L359 184','M309 214 L367 203','M454 166 C505 160 554 169 594 191','M516 280 C576 263 648 260 704 272','M151 349 C292 352 472 354 650 355','M113 299 C265 307 443 307 610 302','M210 151 C204 190 204 225 217 260','M410 139 C425 176 442 211 482 276']}
 
 export const CLASSIC_LOW_TOP:ShoeModel={
  id:'classic-low-top',
  name:'Classic Low-Top',
  category:'low-top',
- version:3,
+ version:4,
  fidelity:'refined',coordinateSystem:{width:800,height:430,units:'design'},
- description:'Production-oriented realistic low-top 2D template with refined proportions, seam guides, lace guides, sole construction, and individually paintable panels.',
+ description:'Production 2D low-top template rebuilt around realistic cupsole sneaker proportions, panel overlaps, lace guides, seam construction, and independently paintable surfaces.',
  panelLabels,
  initialColors,
  views:{
