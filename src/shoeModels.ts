@@ -22,15 +22,15 @@ export type ShoeModel={
  views:Record<ShoeView,ShoeViewTemplate>
 }
 
-const side: ShoeViewTemplate={viewBox:'55 55 735 350',paths:panelPaths,details:[]}
+const side: ShoeViewTemplate={viewBox:'55 45 735 355',paths:panelPaths,details:['M114 276 C222 282 347 285 485 280','M184 91 C207 84 229 84 250 89','M278 142 L335 131','M286 160 L344 148','M296 179 L352 167','M306 198 L360 186','M525 175 C571 175 617 188 653 211','M548 267 C601 261 655 263 701 274','M155 349 C292 352 473 354 650 355']}
 
 export const CLASSIC_LOW_TOP:ShoeModel={
  id:'classic-low-top',
  name:'Classic Low-Top',
  category:'low-top',
- version:2,
+ version:3,
  fidelity:'refined',coordinateSystem:{width:800,height:430,units:'design'},
- description:'Refined panel-based low-top template for custom artwork and paint planning.',
+ description:'Production-oriented realistic low-top 2D template with refined proportions, seam guides, lace guides, sole construction, and individually paintable panels.',
  panelLabels,
  initialColors,
  views:{
