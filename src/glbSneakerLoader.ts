@@ -36,8 +36,9 @@ export function parseSneakerGlb(bytes:ArrayBuffer):GlbPart[]{
  const accessors=json.accessors as Accessor[],views=json.bufferViews as BufferView[],meshes=json.meshes as Mesh[],nodes=json.nodes as Node[]
  if(!accessors||!views||!meshes||!nodes)throw Error('GLB missing mesh structures')
  const byName=new Map(LOW_TOP_MODEL_MANIFEST.parts.map(p=>[p.futureMeshName,p.panelId]))
+ const inferPanel=(name:string):PanelId|undefined=>{const s=name.toLowerCase();if(s.includes('toe')&&s.includes('box'))return 'toeBox';if(s.includes('toe'))return 'toeGuard';if(s.includes('heel'))return 'heel';if(s.includes('collar'))return 'collar';if(s.includes('tongue'))return 'tongue';if(s.includes('eye')||s.includes('laceguard'))return 'eyestay';if(s.includes('quarter')||s.includes('upper')||s.includes('main')&&s.includes('body'))return 'quarter';if(s.includes('midsole')||s.includes('rim'))return 'midsole';if(s.includes('outsole')||s.includes('sole'))return 'outsole';return undefined}
  const result:GlbPart[]=[]
- const walk=(index:number,parent:number[])=>{const n=nodes[index],m=mul(parent,nodeMatrix(n));if(n.mesh!==undefined){const mesh=meshes[n.mesh];const name=mesh.name??'';const panel=byName.get(name)
+ const walk=(index:number,parent:number[])=>{const n=nodes[index],m=mul(parent,nodeMatrix(n));if(n.mesh!==undefined){const mesh=meshes[n.mesh];const name=mesh.name??'';const panel=byName.get(name)??inferPanel(name)
  if(panel)for(const prim of mesh.primitives){if(prim.mode!==undefined&&prim.mode!==4)continue
  const p=readAccessor(accessors[prim.attributes.POSITION],views,bin!),norm=prim.attributes.NORMAL!==undefined?readAccessor(accessors[prim.attributes.NORMAL],views,bin!):[]
  const inds=prim.indices!==undefined?readAccessor(accessors[prim.indices],views,bin!):Array.from({length:p.length/3},(_,i)=>i)
@@ -49,9 +50,9 @@ export function parseSneakerGlb(bytes:ArrayBuffer):GlbPart[]{
  n.children?.forEach(child=>walk(child,m))}
  const roots=json.scenes?.[json.scene??0]?.nodes??nodes.map((_:Node,i:number)=>i).filter((i:number)=>!nodes.some(n=>n.children?.includes(i)))
  roots.forEach((i:number)=>walk(i,I))
- if(!result.length)throw Error('GLB contains no named paintable sneaker meshes')
+ if(!result.length)throw Error('GLB contains no recognizable paintable sneaker meshes')
  const missing=LOW_TOP_MODEL_MANIFEST.parts.filter(p=>!result.some(r=>r.id===p.panelId)).map(p=>p.futureMeshName)
- if(missing.length)throw Error('Missing paintable meshes: '+missing.join(', '))
+ if(missing.length)console.warn('Sneaker GLB loaded with unmapped zones:',missing.join(', '))
  // Center and normalize the shoe to the current preview camera.
  const coords=result.flatMap(p=>p.vertices),min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity]
  for(let i=0;i<coords.length;i+=3)for(let a=0;a<3;a++){min[a]=Math.min(min[a],coords[i+a]);max[a]=Math.max(max[a],coords[i+a])}
