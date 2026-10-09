@@ -36,11 +36,6 @@
 .real-2d-stage{position:relative;width:100%;height:100%;min-height:390px;overflow:hidden;border-radius:12px;background:#f2f2ef}
 .real-2d-stage iframe{position:absolute;inset:-8%;width:116%;height:116%;border:0;pointer-events:none}
 .real-2d-stage.mirror iframe{transform:scaleX(-1)}
-.real-2d-hotspots{position:absolute;inset:0;pointer-events:none}
-.real-hotspot{position:absolute;width:28px;height:28px;border:2px solid rgba(255,255,255,.95);border-radius:50%;background:var(--panel);box-shadow:0 1px 7px #0008;pointer-events:auto;opacity:.9}
-.real-hotspot.selected{outline:4px solid #111;outline-offset:2px}
-.real-hotspot:disabled{pointer-events:none;opacity:.45}
-.real-hotspot.h0{left:20%;top:43%}.real-hotspot.h1{left:29%;top:30%}.real-hotspot.h2{left:42%;top:30%}.real-hotspot.h3{left:49%;top:50%}.real-hotspot.h4{left:43%;top:42%}.real-hotspot.h5{left:70%;top:52%}.real-hotspot.h6{left:78%;top:61%}.real-hotspot.h7{left:57%;top:73%}.real-hotspot.h8{left:58%;top:81%}
-.real-2d-badge{position:absolute;left:10px;bottom:10px;padding:6px 8px;border-radius:7px;background:#fffffff0;font-size:10px;font-weight:800;letter-spacing:.08em}
+.real-2d-hitareas{position:absolute;inset:0;pointer-events:none}\n.real-hitarea{position:absolute;border:1px solid transparent;border-radius:28%;background:transparent;pointer-events:auto;cursor:pointer;transition:border-color .12s,background .12s}\n.real-hitarea span{position:absolute;opacity:0;pointer-events:none}\n.real-hitarea:hover,.real-hitarea:focus-visible{border-color:rgba(17,17,17,.65);background:rgba(255,255,255,.08);outline:none}\n.real-hitarea.selected{border:2px solid rgba(17,17,17,.82);background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.7) inset}\n.real-hitarea:disabled{pointer-events:none}\n.real-2d-badge{position:absolute;left:10px;bottom:10px;padding:6px 8px;border-radius:7px;background:#fffffff0;font-size:10px;font-weight:800;letter-spacing:.08em}
 .real-2d-unavailable{min-height:330px;display:grid;place-content:center;gap:8px;text-align:center;color:#666;padding:30px}.real-2d-unavailable b{color:#222}
-@media(max-width:700px){.real-2d-stage{min-height:310px}.real-hotspot{width:24px;height:24px}}
+@media(max-width:700px){.real-2d-stage{min-height:310px}.real-hitarea.selected{border-width:1.5px}}
