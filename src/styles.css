@@ -44,3 +44,6 @@
 .real-2d-badge{position:absolute;left:10px;bottom:10px;padding:6px 8px;border-radius:7px;background:#fffffff0;font-size:10px;font-weight:800;letter-spacing:.08em}
 .real-2d-unavailable{min-height:330px;display:grid;place-content:center;gap:8px;text-align:center;color:#666;padding:30px}.real-2d-unavailable b{color:#222}
 @media(max-width:700px){.real-2d-stage{min-height:310px}.real-2d-hitareas>.real-hitarea.selected{border-width:1.5px}}
+
+/* Phase 1Y: licensed/photo reference-backed 2D workspace */
+.reference-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 12px}.reference-tools button{background:#fff;border:1px solid #d1d1cc;border-radius:9px;padding:9px 12px;font-weight:650}.reference-tools small{color:#666;flex-basis:100%}.shoe-reference-image{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
