@@ -2,6 +2,7 @@ export type PanelId =
   | 'toeBox'
   | 'toeGuard'
   | 'quarter'
+  | 'swoosh'
   | 'eyestay'
   | 'heel'
   | 'collar'
@@ -15,6 +16,7 @@ export const panelLabels: Record<PanelId, string> = {
   toeBox: 'Toe box',
   toeGuard: 'Toe guard',
   quarter: 'Side panel',
+  swoosh: 'Swoosh',
   eyestay: 'Eyestay',
   heel: 'Heel',
   collar: 'Collar',
@@ -27,6 +29,7 @@ export const initialColors: PanelColors = {
   toeBox: '#f8f8f6',
   toeGuard: '#ffffff',
   quarter: '#ffffff',
+  swoosh: '#ffffff',
   eyestay: '#f3f3ef',
   heel: '#efefeb',
   collar: '#e6e6e1',
@@ -40,6 +43,7 @@ export const panelPaths: Record<PanelId, string> = {
   collar: 'M169 105 C193 77 232 67 273 75 C299 80 321 91 340 108 L319 139 C294 124 268 117 239 117 C213 117 192 124 176 140 L157 132 Z',
   tongue: 'M263 111 C279 91 309 88 332 102 L377 226 L330 245 L291 174 L252 174 Z',
   quarter: 'M217 149 C274 139 339 136 410 139 L479 145 C508 149 536 159 561 174 C585 189 605 208 622 231 L592 270 C535 267 477 269 414 274 L286 268 L217 260 Z',
+  swoosh: 'M290 190 C345 174 402 162 466 153 C431 176 397 199 367 223 C346 240 326 248 308 244 C287 239 279 220 290 190 Z',
   eyestay: 'M253 126 L326 112 L385 225 L329 246 L289 171 L247 171 Z',
   toeBox: 'M446 158 C489 149 537 151 581 160 C624 169 660 185 685 207 C702 222 711 239 710 255 C665 249 620 249 576 254 C542 258 511 265 482 276 L458 226 L425 188 Z',
   toeGuard: 'M482 276 C522 259 570 251 621 251 C663 251 700 257 726 270 C746 280 758 294 758 307 L751 315 L508 313 L472 293 Z',
