@@ -49,3 +49,6 @@
 .reference-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 12px}.reference-tools button{background:#fff;border:1px solid #d1d1cc;border-radius:9px;padding:9px 12px;font-weight:650}.reference-tools small{color:#666;flex-basis:100%}.shoe-reference-image{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
 
 .real-template-required{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:9px;text-align:center;color:#666;padding:24px}.real-template-required b{color:#171717;font-size:1rem}.real-template-required span{max-width:360px;font-size:.82rem;line-height:1.45}.real-template-required button{border:1px solid #ccc;background:#fff;border-radius:9px;padding:9px 12px;font-weight:700}
+
+/* AF1 interactive color masks: color sits over the uploaded line art using multiply so black seams/details remain visible. */
+.template-panel-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:2;mix-blend-mode:multiply}.template-panel-overlay path{stroke:transparent;stroke-width:5;cursor:pointer;transition:filter .12s,stroke .12s}.template-panel-overlay path:hover,.template-panel-overlay path.selected{stroke:#111;stroke-dasharray:10 7;filter:brightness(.96)}.shoe-reference-image{z-index:1}
