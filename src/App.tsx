@@ -22,14 +22,14 @@ export default function App(){
  const [modelId,setModelId]=useState(DEFAULT_SHOE_MODEL_ID),model=getShoeModel(modelId)
  const [referenceImages,setReferenceImages]=useState<Record<string,string>>({})
  const referenceInput=useRef<HTMLInputElement>(null)
- const referenceKey=modelId+'|'+activeView
- const referenceImage=referenceImages[referenceKey]
  const [useThreeRenderer,setUseThreeRenderer]=useState(false)
  const [show3D,setShow3D]=useState(false),[showReferences,setShowReferences]=useState(false),[real2D,setReal2D]=useState(true)
  const [mode,setMode]=useState<Mode>('panels'),[activeView,setActiveView]=useState<ShoeView>('outer'),[views,setViews]=useState<Record<ShoeView,ViewDocument>>(freshViews),[selected,setSelected]=useState<PanelId>('quarter')
  const [tool,setTool]=useState<DrawTool>('brush'),[drawColor,setDrawColor]=useState('#111111'),[brushSize,setBrushSize]=useState(10),[drawOpacity,setDrawOpacity]=useState(1),[drawClipPanel,setDrawClipPanel]=useState<PanelId|null>(null),[material,setMaterial]=useState<'solid'|'pearl'|'metallic'|'interference'|'chameleon'>('solid'),[strokeRedo,setStrokeRedo]=useState<Record<ShoeView,Stroke[]>>({outer:[],inner:[],top:[],front:[],heel:[]})
  const [selectedArtwork,setSelectedArtwork]=useState<string|null>(null),[layers,setLayers]=useState<LayerState[]>(DEFAULT_LAYERS),[projectName,setProjectName]=useState('My Sneaker Design'),[status,setStatus]=useState('Not saved yet'),[zoom,setZoom]=useState(1),[pan,setPan]=useState({x:0,y:0})
  const panRef=useRef<{x:number;y:number;px:number;py:number}|null>(null),fileRef=useRef<HTMLInputElement>(null),projectRef=useRef<HTMLInputElement>(null)
+ const referenceKey=modelId+'|'+activeView
+ const referenceImage=referenceImages[referenceKey]
  const modelManifest=manifestForModel(modelId),selectedPart=partForPanel(modelId,selected),viewParts=partsForView(modelId,activeView)
  const doc=views[activeView],currentArtwork=doc.artworks.find(x=>x.id===selectedArtwork)??null,visible=(id:LayerId)=>layers.find(x=>x.id===id)?.visible!==false
  const patchView=(patch:Partial<ViewDocument>)=>setViews(v=>({...v,[activeView]:{...v[activeView],...patch}}))
