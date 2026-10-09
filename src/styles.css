@@ -36,6 +36,11 @@
 .real-2d-stage{position:relative;width:100%;height:100%;min-height:390px;overflow:hidden;border-radius:12px;background:#f2f2ef}
 .real-2d-stage iframe{position:absolute;inset:-8%;width:116%;height:116%;border:0;pointer-events:none}
 .real-2d-stage.mirror iframe{transform:scaleX(-1)}
-.real-2d-hitareas{position:absolute;inset:0;pointer-events:none}\n.real-2d-hitareas>.real-hitarea{position:absolute;display:block;min-width:0;min-height:0;margin:0;padding:0;border:0;border-radius:28%;background:transparent;box-shadow:none;color:transparent;font-size:0;line-height:0;pointer-events:auto;cursor:pointer;transition:border-color .12s,background .12s}\n.real-2d-hitareas>.real-hitarea:hover,.real-2d-hitareas>.real-hitarea:focus-visible{border-color:rgba(17,17,17,.65);background:rgba(255,255,255,.08);outline:none}\n.real-2d-hitareas>.real-hitarea.selected{border:2px solid rgba(17,17,17,.82);background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.7) inset}\n.real-2d-hitareas>.real-hitarea:disabled{pointer-events:none}\n.real-2d-badge{position:absolute;left:10px;bottom:10px;padding:6px 8px;border-radius:7px;background:#fffffff0;font-size:10px;font-weight:800;letter-spacing:.08em}
+.real-2d-hitareas{position:absolute;inset:0;pointer-events:none}
+.real-2d-hitareas>.real-hitarea{position:absolute;display:block;min-width:0;min-height:0;margin:0;padding:0;border:0;border-radius:28%;background:transparent;box-shadow:none;color:transparent;font-size:0;line-height:0;pointer-events:auto;cursor:pointer;transition:border-color .12s,background .12s}
+.real-2d-hitareas>.real-hitarea:hover,.real-2d-hitareas>.real-hitarea:focus-visible{border-color:rgba(17,17,17,.65);background:rgba(255,255,255,.08);outline:none}
+.real-2d-hitareas>.real-hitarea.selected{border:2px solid rgba(17,17,17,.82);background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.7) inset}
+.real-2d-hitareas>.real-hitarea:disabled{pointer-events:none}
+.real-2d-badge{position:absolute;left:10px;bottom:10px;padding:6px 8px;border-radius:7px;background:#fffffff0;font-size:10px;font-weight:800;letter-spacing:.08em}
 .real-2d-unavailable{min-height:330px;display:grid;place-content:center;gap:8px;text-align:center;color:#666;padding:30px}.real-2d-unavailable b{color:#222}
 @media(max-width:700px){.real-2d-stage{min-height:310px}.real-2d-hitareas>.real-hitarea.selected{border-width:1.5px}}
