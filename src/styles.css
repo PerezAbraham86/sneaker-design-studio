@@ -64,3 +64,9 @@
 .af1-color-control{padding:12px;margin:12px 0;border:1px solid #cbd5e1;border-radius:10px;background:#f0f7ff}
 .af1-color-control h3{margin:0 0 10px;font-size:14px}
 .af1-color-control p{font-size:12px;color:#475569;line-height:1.5}
+
+/* AF1 18-region configurator */
+.af1-configurator{display:grid;grid-template-columns:190px minmax(0,1fr) 220px;gap:12px;min-height:500px}
+.af1-parts,.af1-region-control{background:#fff;border:1px solid #d8dde2;border-radius:12px;padding:14px;overflow:auto;max-height:500px}
+.af1-parts h3{margin:0 0 3px}.af1-parts>p{margin:0 0 15px;font-size:11px;color:#687078}.af1-parts section{display:grid;gap:4px;margin:0 0 13px}.af1-parts section>span{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:#727980;font-weight:800;margin-bottom:3px}.af1-parts button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;border-radius:8px;padding:7px 8px;text-align:left;font-size:12px}.af1-parts button.active{background:#171717;color:#fff}.af1-parts i{display:block;width:20px;height:20px;border-radius:50%;border:1px solid #9aa0a6;flex:0 0 auto}.af1-region-control h2{margin:5px 0 18px}.af1-region-control p{font-size:11px;line-height:1.45;color:#5e6770}.af1-region-control button{width:100%;border:1px solid #ccd1d5;background:#fff;border-radius:7px;padding:7px 9px}.af1-configurator .af1-real-preview{height:500px}
+@media(max-width:1000px){.af1-configurator{grid-template-columns:160px minmax(0,1fr)}.af1-region-control{grid-column:1/-1;max-height:none}}@media(max-width:700px){.af1-configurator{grid-template-columns:1fr}.af1-parts,.af1-region-control{max-height:none}.af1-configurator .af1-real-preview{height:380px}}
