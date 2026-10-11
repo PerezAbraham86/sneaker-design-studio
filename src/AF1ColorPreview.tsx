@@ -1,20 +1,49 @@
 import { Suspense, useEffect, useMemo } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { AF1_REGION_GROUPS, AF1_REGION_LABELS, type AF1RegionColors, type AF1RegionId } from './af1Regions'
 
-const MODEL_URL = '/models/nike_air_force_1%20(1).glb'
+const MODEL_URL = '/models/AF1-16regions(2).glb'
 
-function RealAF1({ colors, selected, onSelect }: { colors: AF1RegionColors; selected: AF1RegionId; onSelect:(id:AF1RegionId)=>void }) {
+const normalizeName = (name:string) => name.toLowerCase().replace(/[^a-z0-9]/g,'')
+const REGION_BY_MESH: Record<string,AF1RegionId> = {
+  tip:'tip',
+  vamp:'vamp',
+  eyestay:'eyestay',
+  quarterleft:'quarterLeft',
+  quarterright:'quarterRight',
+  swooshleft:'swooshLeft',
+  swooshright:'swooshRight',
+  tongue:'tongue',
+  laces:'laces',
+  liningleft:'liningLeft',
+  liningright:'liningRight',
+  backtab:'backtab',
+  midsole:'midsole',
+  midsolestripe:'midsoleStripe',
+  midsolelogo:'midsoleLogo',
+  outsole:'outsole',
+}
+
+function regionForObject(object:THREE.Object3D):AF1RegionId|undefined {
+  let current:THREE.Object3D|null=object
+  while(current){
+    const region=REGION_BY_MESH[normalizeName(current.name)]
+    if(region) return region
+    current=current.parent
+  }
+}
+
+function RealAF1({ colors, onSelect }: { colors: AF1RegionColors; onSelect:(id:AF1RegionId)=>void }) {
   const { scene } = useGLTF(MODEL_URL)
-  const { gl } = useThree()
   const model = useMemo(() => {
     const root = scene.clone(true)
     root.traverse(object => {
-      if (object instanceof THREE.Mesh) {
-        object.material = Array.isArray(object.material) ? object.material.map(material => material.clone()) : object.material.clone()
-      }
+      if (!(object instanceof THREE.Mesh)) return
+      object.material = Array.isArray(object.material)
+        ? object.material.map(material => material.clone())
+        : object.material.clone()
     })
     const bounds = new THREE.Box3().setFromObject(root)
     const size = bounds.getSize(new THREE.Vector3())
@@ -25,40 +54,40 @@ function RealAF1({ colors, selected, onSelect }: { colors: AF1RegionColors; sele
   }, [scene])
 
   useEffect(() => {
-    // Preserve the original texture as a grayscale detail carrier, then tint
-    // it with the selected region color. This is the non-destructive material
-    // path used while the licensed GLB is being authored into independently selectable regions.
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
-      const materials = Array.isArray(object.material) ? object.material : [object.material]
-      materials.forEach(material => {
-        if (material instanceof THREE.MeshStandardMaterial) {
-          material.map = null
-          material.color.set(colors[selected])
-          material.vertexColors = false
-          material.needsUpdate = true
-        }
+      const region=regionForObject(object)
+      if(!region) return
+      const materials=Array.isArray(object.material)?object.material:[object.material]
+      materials.forEach(material=>{
+        if(!(material instanceof THREE.MeshStandardMaterial)) return
+        // The Blender export is authored with a neutral base. Keep its
+        // roughness/normal detail maps while the UI supplies each panel color.
+        material.map=null
+        material.color.set(colors[region])
+        material.vertexColors=false
+        material.needsUpdate=true
       })
     })
-  }, [model,colors,selected])
+  },[model,colors])
 
-  const pickRegion = (event:any) => {
+  const pickRegion=(event:any)=>{
+    const hit=event.intersections?.[0]?.object as THREE.Object3D|undefined
+    if(!hit) return
+    const region=regionForObject(hit)
+    if(!region) return
     event.stopPropagation()
-    const hit = event.intersections?.[0]
-    if (!hit?.uv) return
-    // Region picking is now routed through the 3D surface. With the current
-    // single-material source asset there is no trustworthy UV-to-region atlas
-    // yet, so retain the selected region instead of inventing a false mapping.
-    onSelect(selected)
+    onSelect(region)
   }
 
-  useEffect(() => () => {
-    model.traverse(object => {
-      if (!(object instanceof THREE.Mesh)) return
-      const materials = Array.isArray(object.material) ? object.material : [object.material]
-      materials.forEach(material => material.dispose())
+  useEffect(()=>()=> {
+    model.traverse(object=>{
+      if(!(object instanceof THREE.Mesh)) return
+      const materials=Array.isArray(object.material)?object.material:[object.material]
+      materials.forEach(material=>material.dispose())
     })
-  }, [model])
+  },[model])
+
   return <primitive object={model} onPointerDown={pickRegion}/>
 }
 
@@ -72,13 +101,15 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
      {AF1_REGION_GROUPS.map(group=><section key={group.label}><span>{group.label}</span>{group.regions.map(id=><button key={id} className={selected===id?'active':''} onClick={()=>onSelect(id)}><i style={{background:colors[id]}}/>{AF1_REGION_LABELS[id]}</button>)}</section>)}
    </div>
    <div className="preview-3d af1-real-preview">
-     <div className="af1-preview-toolbar"><strong>Actual Nike Air Force 1 · 3D</strong><span>Selected: {label}</span><button onClick={onReset}>Reset colors</button></div>
+     <div className="af1-preview-toolbar"><strong>Nike Air Force 1 · 16-region 3D</strong><span>Selected: {label}</span><button onClick={onReset}>Reset colors</button></div>
      <Canvas camera={{position:[3.8,2.3,4.8],fov:42}} shadows>
        <color attach="background" args={['#e8edf2']}/><ambientLight intensity={1.8}/><directionalLight position={[5,8,5]} intensity={2.5}/>
-       <Suspense fallback={null}><RealAF1 colors={colors} selected={selected} onSelect={onSelect}/></Suspense><OrbitControls makeDefault enablePan={false} minDistance={2.1} maxDistance={9}/>
+       <Suspense fallback={null}><RealAF1 colors={colors} onSelect={onSelect}/></Suspense><OrbitControls makeDefault enablePan={false} minDistance={2.1} maxDistance={9}/>
      </Canvas>
-     <p className="preview-3d-note">Real AF1 · drag to rotate · scroll to zoom</p>
+     <p className="preview-3d-note">16 independently colorable regions · click a shoe part to select · drag to rotate · scroll to zoom</p>
    </div>
-   <div className="af1-region-control"><span className="micro">SELECTED REGION</span><h2>{label}</h2><label className="control-row">Color<input aria-label={label+' color'} type="color" value={colors[selected]} onChange={e=>onColorChange(selected,e.target.value)}/></label><code>{colors[selected].toUpperCase()}</code><p>The current 16-region configurator matches the regions being authored in Blender. Backtab Logo and Seams are intentionally omitted for now. Independent 3D colors will activate when the newly separated GLB is exported and added to the app.</p><button onClick={()=>onColorChange(selected,'#ffffff')}>Reset {label}</button></div>
+   <div className="af1-region-control"><span className="micro">SELECTED REGION</span><h2>{label}</h2><label className="control-row">Color<input aria-label={label+' color'} type="color" value={colors[selected]} onChange={e=>onColorChange(selected,e.target.value)}/></label><code>{colors[selected].toUpperCase()}</code><p>The current Blender-authored AF1 has 16 mapped regions. Backtab Logo and Seams remain intentionally omitted until those objects are authored separately.</p><button onClick={()=>onColorChange(selected,'#ffffff')}>Reset {label}</button></div>
  </div>
 }
+
+useGLTF.preload(MODEL_URL)
