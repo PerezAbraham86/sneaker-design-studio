@@ -27,7 +27,7 @@ function RealAF1({ colors, selected, onSelect }: { colors: AF1RegionColors; sele
   useEffect(() => {
     // Preserve the original texture as a grayscale detail carrier, then tint
     // it with the selected region color. This is the non-destructive material
-    // path used while the licensed GLB is being authored into 18 UV masks.
+    // path used while the licensed GLB is being authored into independently selectable regions.
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
       const materials = Array.isArray(object.material) ? object.material : [object.material]
@@ -79,6 +79,6 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
      </Canvas>
      <p className="preview-3d-note">Real AF1 · drag to rotate · scroll to zoom</p>
    </div>
-   <div className="af1-region-control"><span className="micro">SELECTED REGION</span><h2>{label}</h2><label className="control-row">Color<input aria-label={label+' color'} type="color" value={colors[selected]} onChange={e=>onColorChange(selected,e.target.value)}/></label><code>{colors[selected].toUpperCase()}</code><p>The 18-region state and 3D surface-selection path are active. The licensed source GLB still contains one material and no region atlas, so independent colors require an authored 18-region UV mask asset; the app will not guess panel boundaries.</p><button onClick={()=>onColorChange(selected,'#ffffff')}>Reset {label}</button></div>
+   <div className="af1-region-control"><span className="micro">SELECTED REGION</span><h2>{label}</h2><label className="control-row">Color<input aria-label={label+' color'} type="color" value={colors[selected]} onChange={e=>onColorChange(selected,e.target.value)}/></label><code>{colors[selected].toUpperCase()}</code><p>The current 16-region configurator matches the regions being authored in Blender. Backtab Logo and Seams are intentionally omitted for now. Independent 3D colors will activate when the newly separated GLB is exported and added to the app.</p><button onClick={()=>onColorChange(selected,'#ffffff')}>Reset {label}</button></div>
  </div>
 }

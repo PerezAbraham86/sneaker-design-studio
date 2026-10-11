@@ -3,9 +3,8 @@ export const AF1_REGION_GROUPS = [
   { label: 'Swoosh', regions: ['swooshLeft','swooshRight'] },
   { label: 'Tongue & Laces', regions: ['tongue','laces'] },
   { label: 'Lining', regions: ['liningLeft','liningRight'] },
-  { label: 'Backtab', regions: ['backtab','backtabLogo'] },
+  { label: 'Backtab', regions: ['backtab'] },
   { label: 'Sole', regions: ['midsole','midsoleStripe','midsoleLogo','outsole'] },
-  { label: 'Details', regions: ['seams'] },
 ] as const
 
 export type AF1RegionId = typeof AF1_REGION_GROUPS[number]['regions'][number]
@@ -14,8 +13,8 @@ export type AF1RegionColors = Record<AF1RegionId,string>
 export const AF1_REGION_LABELS: Record<AF1RegionId,string> = {
   tip:'Tip', vamp:'Vamp', eyestay:'Eyestay', quarterLeft:'Quarter Left', quarterRight:'Quarter Right',
   swooshLeft:'Swoosh Left', swooshRight:'Swoosh Right', tongue:'Tongue', laces:'Laces',
-  liningLeft:'Lining Left', liningRight:'Lining Right', backtab:'Backtab', backtabLogo:'Backtab Logo',
-  midsole:'Midsole', midsoleStripe:'Midsole Stripe', midsoleLogo:'Midsole Logo', outsole:'Outsole', seams:'Seams'
+  liningLeft:'Lining Left', liningRight:'Lining Right', backtab:'Backtab',
+  midsole:'Midsole', midsoleStripe:'Midsole Stripe', midsoleLogo:'Midsole Logo', outsole:'Outsole'
 }
 
 export const AF1_REGION_IDS = AF1_REGION_GROUPS.flatMap(group => [...group.regions]) as AF1RegionId[]
