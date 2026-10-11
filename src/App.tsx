@@ -6,25 +6,10 @@ import RealShoe2D from './RealShoe2D'
 import DrawingCanvas,{type DrawTool,type Stroke} from './DrawingCanvas'
 import ArtworkLayer,{type ArtworkItem} from './ArtworkLayer'
 import {DEFAULT_LAYERS,SHOE_VIEWS,VIEW_LABELS,downloadProject,isProjectFile,loadLocal,makeProject,saveLocal,type LayerId,type LayerState,type ProjectFile,type ShoeView,type ViewDocument} from './project'
-import {initialColors,panelLabels,type PanelColors,type PanelId} from './shoeTemplate'
+import {initialColors,panelLabels,type PanelId} from './shoeTemplate'
 import {DEFAULT_SHOE_MODEL_ID,SHOE_MODELS,getShoeModel,modelPanels} from './shoeModels'
 import {manifestForModel,partForPanel,partsForView} from './modelManifest'
 type Mode='panels'|'draw'|'image'|'layers'|'project';const panelOrder=Object.keys(panelLabels) as PanelId[]
-const AF1_OUTER_MASKS:Partial<Record<PanelId,string>>={
- toeBox:'M145 354 C235 331 378 323 523 319 L558 335 L554 407 C436 423 287 420 147 398 Z',
- toeGuard:'M112 354 C121 333 139 318 169 309 C270 288 407 286 526 296 L558 335 C564 394 552 421 527 443 C391 467 245 462 115 427 C101 405 100 378 112 354 Z',
- eyestay:'M426 267 C516 226 615 183 733 139 L797 174 C706 230 621 284 552 335 L526 296 Z',
- tongue:'M497 232 C558 169 637 91 704 21 C755 31 806 62 845 101 L747 178 L620 276 Z',
- collar:'M735 113 C806 65 876 77 946 137 C1018 196 1113 218 1237 207 L1325 242 C1191 281 1066 270 955 221 C873 185 814 155 735 113 Z',
- quarter:'M552 335 C621 284 706 230 797 174 C850 257 897 300 974 306 C1065 310 1158 280 1250 243 L1379 294 L1385 454 L1059 462 C1026 414 1004 363 970 322 C891 371 817 416 744 455 L603 445 Z',
- swoosh:'M755 312 C836 297 928 286 1024 274 C1138 260 1248 230 1326 204 C1249 253 1165 304 1085 355 C1008 404 928 433 850 420 C791 410 755 373 755 312 Z',
- heel:'M1249 243 L1377 218 L1414 291 L1412 454 L1257 459 C1266 390 1265 315 1249 243 Z',
- midsole:'M102 441 C337 467 593 474 852 466 C1050 460 1233 452 1411 456 L1425 544 C1200 571 940 579 670 575 C426 572 229 559 99 526 Z',
- outsole:'M99 526 C310 558 579 575 849 575 C1069 575 1260 565 1425 544 L1421 603 C1205 632 946 642 672 637 C409 633 205 617 104 588 Z'
-}
-function NativeAf1Outer({colors,selected,onSelect,enabled}:{colors:PanelColors;selected:PanelId;onSelect:(p:PanelId)=>void;enabled:boolean}){return <svg className="native-af1-template" viewBox="0 0 1536 738" preserveAspectRatio="xMidYMid meet" aria-label="Air Force 1 Low outer editable template"><g className="native-af1-panels">{Object.entries(AF1_OUTER_MASKS).map(([id,d])=><path key={id} d={d} fill={colors[id as PanelId]} className={selected===id&&enabled?'selected':''} onClick={()=>enabled&&onSelect(id as PanelId)}/>)}</g><g className="native-af1-details"><path d="M443 318 C540 284 640 230 744 157"/><path d="M556 253 C531 244 517 231 520 217 C523 204 539 201 554 211 C564 187 584 177 601 188 C612 195 613 209 605 223 C623 207 645 205 658 217 C670 228 665 247 650 259 C669 245 692 246 704 260 C715 273 707 292 688 305"/><path d="M142 497 C372 522 633 526 913 511 C1092 502 1259 492 1416 489"/><circle cx="274" cy="361" r="5"/><circle cx="315" cy="351" r="5"/><circle cx="356" cy="343" r="5"/><circle cx="397" cy="336" r="5"/><circle cx="438" cy="330" r="5"/><circle cx="479" cy="324" r="5"/><text x="1200" y="566">AIR</text></g></svg>}
-
-
 const freshView=():ViewDocument=>({colors:{...initialColors},artworks:[],strokes:[]})
 const freshViews=():Record<ShoeView,ViewDocument>=>({outer:freshView(),inner:freshView(),top:freshView(),front:freshView(),heel:freshView()})
 export default function App(){
