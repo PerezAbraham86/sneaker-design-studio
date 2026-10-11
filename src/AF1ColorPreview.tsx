@@ -30,7 +30,10 @@ function RealAF1({ color }: { color: string }) {
       const materials = Array.isArray(object.material) ? object.material : [object.material]
       materials.forEach(material => {
         if (material instanceof THREE.MeshStandardMaterial) {
-          // Preserve original textures and use the color as a tint.
+          // Use the selected color as the real base color instead of multiplying
+          // it by the model's baked brown/black base-color texture. Keep the
+          // geometry and non-color PBR detail maps (normal/roughness/etc.).
+          material.map = null
           material.color.set(color)
           material.needsUpdate = true
         }
@@ -53,7 +56,7 @@ export default function AF1ColorPreview({ color, onColorChange }: { color: strin
   return <div className="preview-3d af1-real-preview">
     <div className="af1-preview-toolbar">
       <strong>Actual Nike Air Force 1 · 3D</strong>
-      <label>Whole shoe tint <input aria-label="Actual AF1 color" type="color" value={color} onChange={event => onColorChange(event.target.value)} /></label>
+      <label>Whole shoe color <input aria-label="Actual AF1 color" type="color" value={color} onChange={event => onColorChange(event.target.value)} /></label>
       <button onClick={() => onColorChange('#ffffff')}>Reset</button>
     </div>
     <Canvas camera={{ position: [3.8, 2.3, 4.8], fov: 42 }} shadows>
@@ -63,6 +66,6 @@ export default function AF1ColorPreview({ color, onColorChange }: { color: strin
       <Suspense fallback={null}><RealAF1 color={color} /></Suspense>
       <OrbitControls makeDefault enablePan={false} minDistance={2.1} maxDistance={9} />
     </Canvas>
-    <p className="preview-3d-note">Real AF1 model · drag to rotate · scroll to zoom · color picker changes the full textured mesh</p>
+    <p className="preview-3d-note">Real AF1 model · drag to rotate · scroll to zoom · color picker changes the actual base material color</p>
   </div>
 }
