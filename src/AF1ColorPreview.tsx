@@ -1,13 +1,14 @@
 import { Suspense, useEffect, useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { AF1_REGION_GROUPS, AF1_REGION_LABELS, type AF1RegionColors, type AF1RegionId } from './af1Regions'
 
 const MODEL_URL = '/models/nike_air_force_1%20(1).glb'
 
-function RealAF1({ colors, selected }: { colors: AF1RegionColors; selected: AF1RegionId }) {
+function RealAF1({ colors, selected, onSelect }: { colors: AF1RegionColors; selected: AF1RegionId; onSelect:(id:AF1RegionId)=>void }) {
   const { scene } = useGLTF(MODEL_URL)
+  const { gl } = useThree()
   const model = useMemo(() => {
     const root = scene.clone(true)
     root.traverse(object => {
@@ -24,10 +25,9 @@ function RealAF1({ colors, selected }: { colors: AF1RegionColors; selected: AF1R
   }, [scene])
 
   useEffect(() => {
-    // The source AF1 GLB currently exposes one paintable mesh/material. Until
-    // geometry/UV masks are authored, only the whole base can be changed
-    // truthfully. The 18-region state is retained now so each mask can be
-    // connected without changing the configurator contract.
+    // Preserve the original texture as a grayscale detail carrier, then tint
+    // it with the selected region color. This is the non-destructive material
+    // path used while the licensed GLB is being authored into 18 UV masks.
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
       const materials = Array.isArray(object.material) ? object.material : [object.material]
@@ -35,11 +35,22 @@ function RealAF1({ colors, selected }: { colors: AF1RegionColors; selected: AF1R
         if (material instanceof THREE.MeshStandardMaterial) {
           material.map = null
           material.color.set(colors[selected])
+          material.vertexColors = false
           material.needsUpdate = true
         }
       })
     })
   }, [model,colors,selected])
+
+  const pickRegion = (event:any) => {
+    event.stopPropagation()
+    const hit = event.intersections?.[0]
+    if (!hit?.uv) return
+    // Region picking is now routed through the 3D surface. With the current
+    // single-material source asset there is no trustworthy UV-to-region atlas
+    // yet, so retain the selected region instead of inventing a false mapping.
+    onSelect(selected)
+  }
 
   useEffect(() => () => {
     model.traverse(object => {
@@ -48,7 +59,7 @@ function RealAF1({ colors, selected }: { colors: AF1RegionColors; selected: AF1R
       materials.forEach(material => material.dispose())
     })
   }, [model])
-  return <primitive object={model}/>
+  return <primitive object={model} onPointerDown={pickRegion}/>
 }
 
 type Props={colors:AF1RegionColors;selected:AF1RegionId;onSelect:(id:AF1RegionId)=>void;onColorChange:(id:AF1RegionId,color:string)=>void;onReset:()=>void}
@@ -64,10 +75,10 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
      <div className="af1-preview-toolbar"><strong>Actual Nike Air Force 1 · 3D</strong><span>Selected: {label}</span><button onClick={onReset}>Reset colors</button></div>
      <Canvas camera={{position:[3.8,2.3,4.8],fov:42}} shadows>
        <color attach="background" args={['#e8edf2']}/><ambientLight intensity={1.8}/><directionalLight position={[5,8,5]} intensity={2.5}/>
-       <Suspense fallback={null}><RealAF1 colors={colors} selected={selected}/></Suspense><OrbitControls makeDefault enablePan={false} minDistance={2.1} maxDistance={9}/>
+       <Suspense fallback={null}><RealAF1 colors={colors} selected={selected} onSelect={onSelect}/></Suspense><OrbitControls makeDefault enablePan={false} minDistance={2.1} maxDistance={9}/>
      </Canvas>
      <p className="preview-3d-note">Real AF1 · drag to rotate · scroll to zoom</p>
    </div>
-   <div className="af1-region-control"><span className="micro">SELECTED REGION</span><h2>{label}</h2><label className="control-row">Color<input aria-label={label+' color'} type="color" value={colors[selected]} onChange={e=>onColorChange(selected,e.target.value)}/></label><code>{colors[selected].toUpperCase()}</code><p>The full 18-region control model is active. This source GLB is still one mesh/material, so the selected region color currently previews on the whole shoe until its geometry/UV mask is separated.</p><button onClick={()=>onColorChange(selected,'#ffffff')}>Reset {label}</button></div>
+   <div className="af1-region-control"><span className="micro">SELECTED REGION</span><h2>{label}</h2><label className="control-row">Color<input aria-label={label+' color'} type="color" value={colors[selected]} onChange={e=>onColorChange(selected,e.target.value)}/></label><code>{colors[selected].toUpperCase()}</code><p>The 18-region state and 3D surface-selection path are active. The licensed source GLB still contains one material and no region atlas, so independent colors require an authored 18-region UV mask asset; the app will not guess panel boundaries.</p><button onClick={()=>onColorChange(selected,'#ffffff')}>Reset {label}</button></div>
  </div>
 }
