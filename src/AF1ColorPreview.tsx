@@ -3,6 +3,7 @@ import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { DecalGeometry } from 'three/examples/jsm/geometries/DecalGeometry.js'
+import { applyPaint, makePaintMaterial, CHAMELEON_PRESETS } from './af1Paint'
 import { AF1_REGION_GROUPS, AF1_REGION_LABELS, type AF1RegionColors, type AF1RegionId } from './af1Regions'
 
 const MODEL_URL='/models/AF1-16regions(2).glb'
