@@ -17,8 +17,15 @@ export const CHAMELEON_PRESETS=[
 // clearcoat and iridescence can actually render (GLTF usually uses Standard).
 export function makePaintMaterial(source:THREE.Material):THREE.Material{
  if(source instanceof THREE.MeshStandardMaterial){
-  const physical=new THREE.MeshPhysicalMaterial()
-  physical.copy(source)
+  const physical=new THREE.MeshPhysicalMaterial({
+   color:source.color.clone(),map:source.map,normalMap:source.normalMap,
+   roughnessMap:source.roughnessMap,metalnessMap:source.metalnessMap,
+   aoMap:source.aoMap,emissive:source.emissive.clone(),
+   roughness:source.roughness,metalness:source.metalness,
+   side:source.side,transparent:source.transparent,opacity:source.opacity,
+   alphaTest:source.alphaTest
+  })
+  physical.normalScale.copy(source.normalScale)
   return physical
  }
  return source.clone()
