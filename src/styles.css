@@ -110,3 +110,6 @@ body{background:#07101a;color:#f8fafc}
 .studio-only .af1-finish-groups button{display:flex;justify-content:space-between;align-items:center;border:0;background:#101722;color:#d7dee6;padding:10px 11px;text-align:left;border-radius:6px}
 .studio-only .af1-finish-groups button:hover{background:#172332}.studio-only .af1-finish-groups button.active{background:#e8edf2;color:#07101a;font-weight:850}
 .af1-finish-groups span{font-size:18px;line-height:1}.af1-finish-note{margin:12px 0 2px!important;color:#8f9ba8!important}
+
+/* Editable hex paint values */
+.af1-hex-input{width:96px;border:1px solid #303b47;border-radius:7px;background:#0b121b;color:#e7edf4;padding:8px 9px;font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;outline:none}.af1-hex-input:focus{border-color:#27d3ff;box-shadow:0 0 0 2px rgba(39,211,255,.12)}
