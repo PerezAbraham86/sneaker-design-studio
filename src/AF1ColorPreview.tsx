@@ -15,22 +15,27 @@ type ArtworkMap=Partial<Record<AF1RegionId,Artwork3D>>
 function regionForObject(object:THREE.Object3D):AF1RegionId|undefined{let current:THREE.Object3D|null=object;while(current){const region=REGION_BY_MESH[normalizeName(current.name)];if(region)return region;current=current.parent}}
 
 function RegionDecal({target,art}:{target:THREE.Mesh;art:Artwork3D}){
+ // DecalGeometry expects projector coordinates in the target mesh's LOCAL
+ // coordinate system. Using Box3.setFromObject() here produced world-space
+ // coordinates, so the generated decal geometry missed the mesh entirely.
  const texture=useLoader(THREE.TextureLoader,art.src)
  useEffect(()=>{texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true},[texture])
  const geometry=useMemo(()=>{
-   target.updateWorldMatrix(true,false)
-   const box=new THREE.Box3().setFromObject(target)
+   if(!target.geometry.boundingBox)target.geometry.computeBoundingBox()
+   const box=target.geometry.boundingBox!.clone()
    const center=box.getCenter(new THREE.Vector3())
    const size=box.getSize(new THREE.Vector3())
-   // The AF1's side panels face predominantly along Z. X/Y controls move the
-   // projector across that panel while keeping artwork attached to the shoe.
-   center.x+=(art.x/100)*size.x*.7
-   center.y+=(art.y/100)*size.y*.7
-   const projector=Math.max(size.x,size.y,size.z)*art.size
-   return new DecalGeometry(target,center,new THREE.Euler(0,0,THREE.MathUtils.degToRad(art.rotation)),new THREE.Vector3(projector,projector,projector))
+   center.x+=(art.x/100)*size.x*.45
+   center.y+=(art.y/100)*size.y*.45
+   // Project through the panel along local Z; the separated AF1 regions retain
+   // the source shoe coordinate system, so this works on either visible side.
+   const depth=Math.max(size.z*3,.08)
+   const width=Math.max(size.x*.9,.08)*art.size
+   const height=Math.max(size.y*1.8,.08)*art.size
+   return new DecalGeometry(target,center,new THREE.Euler(0,0,THREE.MathUtils.degToRad(art.rotation)),new THREE.Vector3(width,height,depth))
  },[target,art.x,art.y,art.size,art.rotation])
  useEffect(()=>()=>geometry.dispose(),[geometry])
- return <mesh geometry={geometry} renderOrder={10}><meshStandardMaterial map={texture} transparent alphaTest={.05} depthWrite={false} polygonOffset polygonOffsetFactor={-4} roughness={.65} metalness={0}/></mesh>
+ return <mesh geometry={geometry} renderOrder={10}><meshBasicMaterial map={texture} transparent alphaTest={.02} depthTest depthWrite={false} polygonOffset polygonOffsetFactor={-8} toneMapped={false} side={THREE.DoubleSide}/></mesh>
 }
 
 function RealAF1({colors,onSelect,artworks}:{colors:AF1RegionColors;onSelect:(id:AF1RegionId)=>void;artworks:ArtworkMap}){
