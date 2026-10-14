@@ -9,35 +9,38 @@ const MODEL_URL='/models/AF1-16regions(2).glb'
 const normalizeName=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]/g,'')
 const REGION_BY_MESH:Record<string,AF1RegionId>={tip:'tip',vamp:'vamp',eyestay:'eyestay',quarterleft:'quarterLeft',quarterright:'quarterRight',swooshleft:'swooshLeft',swooshright:'swooshRight',tongue:'tongue',laces:'laces',liningleft:'liningLeft',liningright:'liningRight',backtab:'backtab',midsole:'midsole',midsolestripe:'midsoleStripe',midsolelogo:'midsoleLogo',outsole:'outsole'}
 
-type Artwork3D={src:string;name:string;size:number;x:number;y:number;rotation:number}
+type Artwork3D={src:string;name:string;size:number;x:number;y:number;rotation:number;aspect:number}
 type ArtworkMap=Partial<Record<AF1RegionId,Artwork3D>>
 
 function regionForObject(object:THREE.Object3D):AF1RegionId|undefined{let current:THREE.Object3D|null=object;while(current){const region=REGION_BY_MESH[normalizeName(current.name)];if(region)return region;current=current.parent}}
 
 function RegionDecal({target,art}:{target:THREE.Mesh;art:Artwork3D}){
- // DecalGeometry expects projector coordinates in the target mesh's LOCAL
- // coordinate system. Using Box3.setFromObject() here produced world-space
- // coordinates, so the generated decal geometry missed the mesh entirely.
  const texture=useLoader(THREE.TextureLoader,art.src)
  useEffect(()=>{texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true},[texture])
  const geometry=useMemo(()=>{
    if(!target.geometry.boundingBox)target.geometry.computeBoundingBox()
    const box=target.geometry.boundingBox!.clone()
    const center=box.getCenter(new THREE.Vector3())
-   const size=box.getSize(new THREE.Vector3())
-   center.x+=(art.x/100)*size.x*.45
-   center.y+=(art.y/100)*size.y*.45
-   // Project through the panel along local Z; the separated AF1 regions retain
-   // the source shoe coordinate system, so this works on either visible side.
-   const depth=Math.max(size.z*3,.08)
-   const width=Math.max(size.x*.9,.08)*art.size
-   const height=Math.max(size.y*1.8,.08)*art.size
-   return new DecalGeometry(target,center,new THREE.Euler(0,0,THREE.MathUtils.degToRad(art.rotation)),new THREE.Vector3(width,height,depth))
- },[target,art.x,art.y,art.size,art.rotation])
+   const panel=box.getSize(new THREE.Vector3())
+   center.x+=(art.x/100)*panel.x*.45
+   center.y+=(art.y/100)*panel.y*.45
+
+   // Size is one uniform scale. Height is derived from the uploaded image's
+   // natural aspect ratio so artwork can never be stretched by the panel.
+   const width=Math.max(panel.x*.9,.08)*art.size
+   const height=width/Math.max(art.aspect,.01)
+   const depth=Math.max(panel.z*3,.08)
+
+   return new DecalGeometry(
+     target,
+     center,
+     new THREE.Euler(0,0,THREE.MathUtils.degToRad(art.rotation)),
+     new THREE.Vector3(width,height,depth)
+   )
+ },[target,art.x,art.y,art.size,art.rotation,art.aspect])
  useEffect(()=>()=>geometry.dispose(),[geometry])
  return <mesh geometry={geometry} renderOrder={10}><meshBasicMaterial map={texture} transparent alphaTest={.02} depthTest depthWrite={false} polygonOffset polygonOffsetFactor={-8} toneMapped={false} side={THREE.DoubleSide}/></mesh>
 }
-
 function RealAF1({colors,onSelect,artworks}:{colors:AF1RegionColors;onSelect:(id:AF1RegionId)=>void;artworks:ArtworkMap}){
  const {scene}=useGLTF(MODEL_URL)
  const model=useMemo(()=>{
@@ -59,7 +62,7 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
  const [artworks,setArtworks]=useState<ArtworkMap>({})
  const art=artworks[selected]
  const patch=(p:Partial<Artwork3D>)=>setArtworks(v=>v[selected]?{...v,[selected]:{...v[selected]!,...p}}:v)
- const upload=(f:File)=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=()=>setArtworks(v=>({...v,[selected]:{src:String(r.result),name:f.name,size:.38,x:0,y:0,rotation:0}}));r.readAsDataURL(f)}
+ const upload=(f:File)=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=()=>{const src=String(r.result);const img=new Image();img.onload=()=>setArtworks(v=>({...v,[selected]:{src,name:f.name,size:.38,x:0,y:0,rotation:0,aspect:img.naturalWidth/Math.max(img.naturalHeight,1)}}));img.src=src};r.readAsDataURL(f)}
  return <div className="af1-configurator">
   <div className="af1-parts"><h3>Shoe Parts</h3><p>Select an area to customize</p>{AF1_REGION_GROUPS.map(g=><section key={g.label}><span>{g.label}</span>{g.regions.map(id=><button key={id} className={selected===id?'active':''} onClick={()=>onSelect(id)}><i style={{background:colors[id]}}/>{AF1_REGION_LABELS[id]}</button>)}</section>)}</div>
   <div className="preview-3d af1-real-preview"><div className="af1-preview-toolbar"><strong>Nike Air Force 1 · 16-region 3D</strong><span>Selected: {label}</span><button onClick={onReset}>Reset colors</button></div>
