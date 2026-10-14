@@ -113,3 +113,12 @@ body{background:#07101a;color:#f8fafc}
 
 /* Editable hex paint values */
 .af1-hex-input{width:96px;border:1px solid #303b47;border-radius:7px;background:#0b121b;color:#e7edf4;padding:8px 9px;font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;outline:none}.af1-hex-input:focus{border-color:#27d3ff;box-shadow:0 0 0 2px rgba(39,211,255,.12)}
+
+/* 3D viewer history controls and chameleon presets */
+.af1-history-buttons{position:absolute;top:16px;right:16px;z-index:5;display:flex;gap:7px}
+.af1-history-buttons button{border:1px solid #405064;background:rgba(7,13,21,.9);color:#f2f6fb;padding:9px 13px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+.af1-history-buttons button:hover:not(:disabled){background:#1b344c}
+.af1-history-buttons button:disabled{opacity:.35;cursor:not-allowed}
+.af1-chameleon-presets{display:grid;gap:8px;margin-top:14px}
+.af1-chameleon-presets label{font-size:11px;color:#cbd5e1;font-weight:750}
+.af1-chameleon-presets select{width:100%;padding:10px;border:1px solid #344457;border-radius:7px;background:#101722;color:#f8fafc}
