@@ -103,7 +103,13 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
    <div className="preview-3d af1-real-preview">
      <div className="af1-preview-toolbar"><strong>Nike Air Force 1 · 16-region 3D</strong><span>Selected: {label}</span><button onClick={onReset}>Reset colors</button></div>
      <Canvas camera={{position:[3.8,2.3,4.8],fov:42}} shadows>
-       <color attach="background" args={['#e8edf2']}/><ambientLight intensity={1.8}/><directionalLight position={[5,8,5]} intensity={2.5}/>
+       <color attach="background" args={['#e8edf2']}/>
+       <hemisphereLight args={['#ffffff','#cbd3dc',2.4]}/>
+       <ambientLight intensity={1.15}/>
+       <directionalLight position={[5,6,6]} intensity={2.1}/>
+       <directionalLight position={[-5,4,4]} intensity={1.65}/>
+       <directionalLight position={[0,3,-6]} intensity={1.35}/>
+       <directionalLight position={[0,7,0]} intensity={1.0}/>
        <Suspense fallback={null}><RealAF1 colors={colors} onSelect={onSelect}/></Suspense><OrbitControls makeDefault enablePan={false} minDistance={2.1} maxDistance={9}/>
      </Canvas>
      <p className="preview-3d-note">16 independently colorable regions · click a shoe part to select · drag to rotate · scroll to zoom</p>
