@@ -98,3 +98,15 @@ body{background:#07101a;color:#f8fafc}
 .studio-only .danger{border-color:#7f1d1d;background:#1b1014;color:#ff4949}.af1-reset-region,.af1-reset-all{margin-top:8px!important;background:#111923!important;color:#cbd5e1!important;border-color:#303b47!important}
 @media(max-width:1050px){.studio-header{grid-template-columns:1fr auto}.studio-header nav{display:none}.studio-only .af1-configurator{grid-template-columns:190px minmax(0,1fr) 260px}}
 @media(max-width:760px){.studio-header{height:64px;padding:0 14px}.studio-stage{height:auto;min-height:calc(100vh - 64px);padding:10px}.studio-only .af1-configurator{grid-template-columns:1fr}.studio-only .af1-parts,.studio-only .af1-region-control{height:auto;max-height:none}.studio-only .af1-real-preview{height:58vh;min-height:420px}.studio-only .af1-parts{max-height:280px}.save-design{padding:9px 11px}}
+
+/* GTA-inspired paint finish controls */
+.af1-paint-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:16px 0 14px;padding:4px;border-radius:10px;background:#151d28}
+.studio-only .af1-paint-tabs button{border:0;background:transparent;color:#8f9ba8;font-weight:800;padding:9px;border-radius:7px}
+.studio-only .af1-paint-tabs button.active{background:#050a10;color:#fff}
+.af1-finish-panel>label{display:block;margin:12px 0;color:#dce3ea;font-size:12px;font-weight:750}
+.af1-finish-panel .af1-current-color{margin-top:7px}
+.af1-finish-panel>h3{margin:17px 0 8px!important;text-transform:uppercase;letter-spacing:.08em;font-size:11px!important;color:#aab4bf}
+.af1-finish-groups{display:grid;gap:3px}
+.studio-only .af1-finish-groups button{display:flex;justify-content:space-between;align-items:center;border:0;background:#101722;color:#d7dee6;padding:10px 11px;text-align:left;border-radius:6px}
+.studio-only .af1-finish-groups button:hover{background:#172332}.studio-only .af1-finish-groups button.active{background:#e8edf2;color:#07101a;font-weight:850}
+.af1-finish-groups span{font-size:18px;line-height:1}.af1-finish-note{margin:12px 0 2px!important;color:#8f9ba8!important}
