@@ -31,6 +31,9 @@ export function makePaintMaterial(source:THREE.Material):THREE.Material{
  return source.clone()
 }
 
+type PaintShader=THREE.WebGLProgramParametersWithUniforms
+const shaderByMaterial=new WeakMap<THREE.MeshStandardMaterial,PaintShader>()
+
 export function applyPaint(material:THREE.Material,finish:PaintFinish){
  if(!(material instanceof THREE.MeshStandardMaterial))return
  const physical=material instanceof THREE.MeshPhysicalMaterial?material:null
@@ -44,35 +47,41 @@ export function applyPaint(material:THREE.Material,finish:PaintFinish){
  if(physical){
   physical.clearcoat=finish.group==='matte'?0:finish.group==='classic'?.12:1
   physical.clearcoatRoughness=finish.group==='chrome'?.09:.2
-  physical.iridescence=finish.group==='chameleon'?.6:finish.group==='pearlescent'?.28:0
+  physical.iridescence=finish.group==='chameleon'?.75:finish.group==='pearlescent'?.38:0
   physical.iridescenceIOR=1.45
   physical.iridescenceThicknessRange=[140,430]
  }
- // Fresnel color shift: surface-facing pixels retain the primary color;
- // grazing-angle pixels reveal the secondary paint/pearl. Unlike a static
- // color blend, the pattern moves as the shoe or camera rotates.
  const shifting=finish.group==='chameleon'||finish.group==='pearlescent'
- if(shifting){
-  const primary=new THREE.Color(finish.primary)
-  const secondary=new THREE.Color(finish.secondary)
-  const strength=finish.group==='chameleon'?.98:.64
-  material.onBeforeCompile=shader=>{
-   shader.uniforms.uPaintPrimary={value:primary}
-   shader.uniforms.uPaintSecondary={value:secondary}
-   shader.uniforms.uPaintStrength={value:strength}
-   shader.fragmentShader='uniform vec3 uPaintPrimary;\nuniform vec3 uPaintSecondary;\nuniform float uPaintStrength;\n'+shader.fragmentShader
-   shader.fragmentShader=shader.fragmentShader.replace(
-    '#include <color_fragment>',
-    `#include <color_fragment>
-    float paintFacing=abs(dot(normalize(vNormal),normalize(vViewPosition)));
-    float paintEdge=pow(1.0-clamp(paintFacing,0.0,1.0),1.15);
-    diffuseColor.rgb=mix(uPaintPrimary,uPaintSecondary,clamp(paintEdge*uPaintStrength,0.0,1.0));`
-   )
-  }
-  material.customProgramCacheKey=()=> 'sneaker-angle-paint-v2'
- }else{
-  material.onBeforeCompile=()=>{}
-  material.customProgramCacheKey=()=> 'sneaker-standard-paint-v2'
+ const primary=new THREE.Color(finish.primary)
+ const secondary=new THREE.Color(finish.secondary)
+ const strength=finish.group==='chameleon'?.98:finish.group==='pearlescent'?.72:0
+ const live=shaderByMaterial.get(material)
+ if(live){
+  live.uniforms.uPaintPrimary.value.copy(primary)
+  live.uniforms.uPaintSecondary.value.copy(secondary)
+  live.uniforms.uPaintStrength.value=strength
  }
- material.needsUpdate=true
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.uPaintPrimary={value:primary}
+  shader.uniforms.uPaintSecondary={value:secondary}
+  shader.uniforms.uPaintStrength={value:strength}
+  shaderByMaterial.set(material,shader)
+  shader.fragmentShader='uniform vec3 uPaintPrimary;\nuniform vec3 uPaintSecondary;\nuniform float uPaintStrength;\n'+shader.fragmentShader
+  shader.fragmentShader=shader.fragmentShader.replace(
+   '#include <color_fragment>',
+   `#include <color_fragment>
+   vec3 paintN=normalize(normal);
+   vec3 paintV=normalize(vViewPosition);
+   float paintFacing=abs(dot(paintN,paintV));
+   float paintEdge=pow(1.0-clamp(paintFacing,0.0,1.0),0.72);
+   diffuseColor.rgb=mix(uPaintPrimary,uPaintSecondary,clamp(paintEdge*uPaintStrength,0.0,1.0));`
+  )
+ }
+ material.customProgramCacheKey=()=> 'sneaker-live-angle-paint-v3'
+ if(!shifting){
+  // strength=0 leaves the exact primary color while retaining one stable
+  // shader program, so switching finish groups never leaves stale uniforms.
+ }
+ material.needsUpdate=!live
 }
+
