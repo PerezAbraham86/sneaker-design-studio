@@ -27,8 +27,16 @@ function RegionDecal({target,art}:{target:THREE.Mesh;art:Artwork3D}){
 
    // Size is one uniform scale. Height is derived from the uploaded image's
    // natural aspect ratio so artwork can never be stretched by the panel.
-   const width=Math.max(panel.x*.9,.08)*art.size
-   const height=width/Math.max(art.aspect,.01)
+   const aspect=Math.max(art.aspect,.01)
+   // Fit the complete image inside the usable panel footprint first, then
+   // apply one uniform scale. This preserves aspect ratio without making a
+   // portrait or landscape upload disappear because one panel axis is small.
+   const maxWidth=Math.max(panel.x*.9,.08)
+   const maxHeight=Math.max(panel.y*1.8,.08)
+   const fitWidth=Math.min(maxWidth,maxHeight*aspect)
+   const fitHeight=fitWidth/aspect
+   const width=fitWidth*art.size
+   const height=fitHeight*art.size
    const depth=Math.max(panel.z*3,.08)
 
    return new DecalGeometry(
