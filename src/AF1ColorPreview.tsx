@@ -119,8 +119,16 @@ function RegionDecal({target,anchor,model,art,region}:{target:THREE.Mesh;anchor:
        // normal is nearly perpendicular to the placement camera.
        const frontRegion=region==='tip'||region==='vamp'
        const heelRegion=region==='backtab'
-       const minFacing=frontRegion?-.20:heelRegion?-.08:soleRegion?-.06:.02
+       const minFacing=frontRegion?-.20:heelRegion?-.08:soleRegion?0:.02
        if(n.dot(direction)<distance*minFacing)continue
+       // Sole meshes are layered strips with narrow raised boundaries. Per-face
+       // ray rejection removes otherwise visible triangles and creates jagged
+       // horizontal gaps. Keep their front-facing triangles together and let
+       // the shoe's depth buffer hide geometry behind the outer sole surface.
+       if(soleRegion){
+         accepted.push(i,i+1,i+2)
+         continue
+       }
        direction.negate().normalize()
        ray.set(eye,direction)
        // Front tip mesh often sits behind a raised rim. Treat the actual
