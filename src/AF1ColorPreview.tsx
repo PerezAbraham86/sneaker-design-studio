@@ -113,14 +113,24 @@ function RegionDecal({target,anchor,model,art,region}:{target:THREE.Mesh;anchor:
        ).transformDirection(target.matrixWorld)
        direction.copy(eye).sub(worldPoint)
        const distance=direction.length()
-       if(distance<.001||n.dot(direction)<distance*.02)continue
-       // Ignore triangles behind the toe, heel, outsole and other front-facing
-       // shoe meshes. This prevents a rear surface from receiving the same ink.
+       if(distance<.001)continue
+       // The rounded toe and heel have steeply curved triangles. Do not
+       // discard their visible edge faces merely because the average face
+       // normal is nearly perpendicular to the placement camera.
+       const frontRegion=region==='tip'||region==='vamp'
+       const heelRegion=region==='backtab'
+       const minFacing=frontRegion?-.13:heelRegion?-.035:.02
+       if(n.dot(direction)<distance*minFacing)continue
        direction.negate().normalize()
        ray.set(eye,direction)
-       ray.far=distance+.035
-       const visible=ray.intersectObject(model,true).find(h=>regionForObject(h.object))
-       if(!visible||visible.distance<distance-Math.max(.035,distance*.012))continue
+       // Front tip mesh often sits behind a raised rim. Treat the actual
+       // target mesh as the artwork carrier; let depth testing naturally
+       // conceal parts truly hidden behind other 3D shoe geometry.
+       const visibilityTarget=frontRegion?target:model
+       ray.far=distance+Math.max(.045,distance*.015)
+       const visible=ray.intersectObject(visibilityTarget,true).find(h=>frontRegion||regionForObject(h.object))
+       const tolerance=frontRegion?Math.max(.14,distance*.035):heelRegion?Math.max(.075,distance*.022):Math.max(.035,distance*.012)
+       if(!visible||visible.distance<distance-tolerance)continue
        if(soleRegion&&n.y<-.24)continue
        accepted.push(i,i+1,i+2)
      }
