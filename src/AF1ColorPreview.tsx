@@ -26,7 +26,7 @@ const makeFinishes=(colors:AF1RegionColors)=>Object.fromEntries(Object.entries(c
 
 function regionForObject(object:THREE.Object3D):AF1RegionId|undefined{let current:THREE.Object3D|null=object;while(current){const region=REGION_BY_MESH[normalizeName(current.name)];if(region)return region;current=current.parent}}
 
-function RegionDecal({target,art}:{target:THREE.Mesh;art:Artwork3D}){
+function RegionDecal({target,art,region}:{target:THREE.Mesh;art:Artwork3D;region:AF1RegionId}){
  const texture=useLoader(THREE.TextureLoader,art.src)
  useEffect(()=>{texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true},[texture])
  const geometry=useMemo(()=>{
@@ -76,8 +76,16 @@ function RegionDecal({target,art}:{target:THREE.Mesh;art:Artwork3D}){
    const height=width/aspect
    const depth=Math.max(largest*.65,.08)
    position.addScaledVector(normal,.002)
-   return new DecalGeometry(target,position,rotation,new THREE.Vector3(width,height,depth))
- },[target,art.x,art.y,art.size,art.rotation,art.aspect])
+   const decal=new DecalGeometry(target,position,rotation,new THREE.Vector3(width,height,depth))
+   // These GLB regions project from an inverted facing direction.
+   // Flip the UVs only so uploaded text and logos stay readable.
+   if((['tip','vamp','quarterLeft','swooshLeft','tongue'] as AF1RegionId[]).includes(region)){
+     const uv=decal.getAttribute('uv')
+     for(let i=0;i<uv.count;i++)uv.setX(i,1-uv.getX(i))
+     uv.needsUpdate=true
+   }
+   return decal
+ },[target,region,art.x,art.y,art.size,art.rotation,art.aspect])
  useEffect(()=>()=>geometry.dispose(),[geometry])
  return <mesh geometry={geometry} renderOrder={10}><meshBasicMaterial map={texture} transparent alphaTest={.02} depthTest depthWrite={false} polygonOffset polygonOffsetFactor={-8} toneMapped={false} side={THREE.DoubleSide}/></mesh>
 }
@@ -92,7 +100,7 @@ function RealAF1({colors,onSelect,artworks,finishes}:{colors:AF1RegionColors;onS
  const regionMeshes=useMemo(()=>{const found={} as Partial<Record<AF1RegionId,THREE.Mesh>>;model.traverse(o=>{if(o instanceof THREE.Mesh){const r=regionForObject(o);if(r&&!found[r])found[r]=o}});return found},[model])
  useEffect(()=>{model.traverse(object=>{if(!(object instanceof THREE.Mesh))return;const region=regionForObject(object);if(!region)return;const ms=Array.isArray(object.material)?object.material:[object.material];ms.forEach(m=>applyPaint(m,finishes[region]))})},[model,colors,finishes])
  useEffect(()=>()=>{model.traverse(o=>{if(o instanceof THREE.Mesh){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose())}})},[model])
- return <group><primitive object={model} onPointerDown={(e:any)=>{const hit=e.intersections?.[0]?.object as THREE.Object3D|undefined;if(!hit)return;const r=regionForObject(hit);if(r){e.stopPropagation();onSelect(r)}}}/>{Object.entries(artworks).map(([id,art])=>{const target=regionMeshes[id as AF1RegionId];return target&&art?<RegionDecal key={id} target={target} art={art}/>:null})}</group>
+ return <group><primitive object={model} onPointerDown={(e:any)=>{const hit=e.intersections?.[0]?.object as THREE.Object3D|undefined;if(!hit)return;const r=regionForObject(hit);if(r){e.stopPropagation();onSelect(r)}}}/>{Object.entries(artworks).map(([id,art])=>{const target=regionMeshes[id as AF1RegionId];return target&&art?<RegionDecal key={id} target={target} art={art} region={id as AF1RegionId}/>:null})}</group>
 }
 
 type Props={colors:AF1RegionColors;selected:AF1RegionId;onSelect:(id:AF1RegionId)=>void;onColorChange:(id:AF1RegionId,color:string)=>void;onReset:()=>void}
