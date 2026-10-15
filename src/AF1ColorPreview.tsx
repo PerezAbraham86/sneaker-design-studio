@@ -126,12 +126,12 @@ function RegionDecal({target,anchor,model,art,region}:{target:THREE.Mesh;anchor:
        // Front tip mesh often sits behind a raised rim. Treat the actual
        // target mesh as the artwork carrier; let depth testing naturally
        // conceal parts truly hidden behind other 3D shoe geometry.
-       const visibilityTarget=frontRegion?target:model
+       const visibilityTarget=frontRegion||soleRegion?target:model
        ray.far=distance+Math.max(.045,distance*.015)
-       const visible=ray.intersectObject(visibilityTarget,true).find(h=>frontRegion||regionForObject(h.object))
-       const tolerance=frontRegion?Math.max(.14,distance*.035):heelRegion?Math.max(.075,distance*.022):Math.max(.035,distance*.012)
+       const visible=ray.intersectObject(visibilityTarget,true).find(h=>frontRegion||soleRegion||regionForObject(h.object))
+       const tolerance=frontRegion?Math.max(.14,distance*.035):heelRegion?Math.max(.075,distance*.022):soleRegion?Math.max(.13,distance*.035):Math.max(.035,distance*.012)
        if(!visible||visible.distance<distance-tolerance)continue
-       if(soleRegion&&n.y<-.24)continue
+       if(soleRegion&&n.y<-.7&&n.dot(new THREE.Vector3(...art.freeProjection.eye).sub(worldPoint))<=0)continue
        accepted.push(i,i+1,i+2)
      }
      decal.setIndex(accepted)
