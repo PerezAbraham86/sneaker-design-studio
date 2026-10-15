@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useLoader } from '@react-three/fiber'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Canvas, useLoader, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import StudioOrbitControls from './StudioOrbitControls'
 import { useDesignHistory } from './useDesignHistory'
@@ -12,7 +12,8 @@ const MODEL_URL='/models/AF1-16regions(2).glb'
 const normalizeName=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]/g,'')
 const REGION_BY_MESH:Record<string,AF1RegionId>={tip:'tip',vamp:'vamp',eyestay:'eyestay',quarterleft:'quarterLeft',quarterright:'quarterRight',swooshleft:'swooshLeft',swooshright:'swooshRight',tongue:'tongue',laces:'laces',liningleft:'liningLeft',liningright:'liningRight',backtab:'backtab',midsole:'midsole',midsolestripe:'midsoleStripe',midsolelogo:'midsoleLogo',outsole:'outsole'}
 
-type Artwork3D={src:string;name:string;size:number;x:number;y:number;rotation:number;aspect:number;mode?:'single'|'multiple'|'free';regions?:AF1RegionId[]}
+type FreeProjection={position:[number,number,number];rotation:[number,number,number,number];width:number;height:number;depth:number}
+type Artwork3D={src:string;name:string;size:number;x:number;y:number;rotation:number;aspect:number;mode?:'single'|'multiple'|'free';regions?:AF1RegionId[];freeProjection?:FreeProjection}
 type ArtworkMap=Partial<Record<AF1RegionId,Artwork3D>>
 type FinishGroup='classic'|'matte'|'metallic'|'metals'|'pearlescent'|'chameleon'|'chrome'
 type FinishState={primary:string;secondary:string;group:FinishGroup}
@@ -61,35 +62,35 @@ function RegionDecal({target,anchor,art,region}:{target:THREE.Mesh;anchor:THREE.
        if(candidate){hit=candidate;outward=direction;break}
      }
    }finally{materials.forEach((m,i)=>{m.side=sides[i]})}
-   const position=hit?hit.point.clone():aim
+   const position=art.mode==='free'&&art.freeProjection?new THREE.Vector3(...art.freeProjection.position):hit?hit.point.clone():aim
    const normal=hit?.face?.normal.clone().transformDirection(anchor.matrixWorld).normalize()??outward
    if(normal.dot(outward)<0)normal.negate()
    const rotation=new THREE.Euler().setFromQuaternion(
-     new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal)
+     art.mode==='free'&&art.freeProjection?new THREE.Quaternion(...art.freeProjection.rotation):new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal)
    )
-   rotation.z+=THREE.MathUtils.degToRad(art.rotation)
+   if(art.mode!=='free'||!art.freeProjection)rotation.z+=THREE.MathUtils.degToRad(art.rotation)
    const aspect=Math.max(art.aspect,.01)
    // Fit to the two longest dimensions of the actual world-space region.
    const axes=[extent.x,extent.y,extent.z].sort((a,b)=>b-a)
    const panelWidth=Math.max(axes[0]*.8,.08)
    const panelHeight=Math.max(axes[1]*1.5,.08)
-   const width=Math.min(panelWidth,panelHeight*aspect)*art.size
-   const height=width/aspect
+   const width=art.mode==='free'&&art.freeProjection?art.freeProjection.width:Math.min(panelWidth,panelHeight*aspect)*art.size
+   const height=art.mode==='free'&&art.freeProjection?art.freeProjection.height:width/aspect
    const depth=Math.max(largest*.65,.08)
    position.addScaledVector(normal,.002)
    // Sole meshes wrap around the entire shoe. A deep box projects through
    // their far/underside faces and creates duplicate or stretched artwork.
    const soleRegion=(['midsole','midsoleStripe','midsoleLogo','outsole'] as AF1RegionId[]).includes(region)
-   const projectionDepth=art.mode==='single'||!art.mode?depth:soleRegion?Math.max(Math.min(depth,largest*.4),.08):Math.max(depth,largest*2)
+   const projectionDepth=art.mode==='free'&&art.freeProjection?art.freeProjection.depth:art.mode==='single'||!art.mode?depth:soleRegion?Math.max(Math.min(depth,largest*.4),.08):Math.max(depth,largest*2)
    const decal=new DecalGeometry(target,position,rotation,new THREE.Vector3(width,height,projectionDepth))
-   if(soleRegion){
+   if(soleRegion||(art.mode==='free'&&art.freeProjection)){
      const verts=decal.getAttribute('position')
      const normals=decal.getAttribute('normal')
      const uv=decal.getAttribute('uv')
      const indices:number[]=[]
      // Preserve only the side facing the image projector, not its opposite
      // side or the lower sole that would otherwise receive a ghost image.
-     const facing=normal.clone().normalize()
+     const facing=art.mode==='free'&&art.freeProjection?new THREE.Vector3(0,0,1).applyQuaternion(new THREE.Quaternion(...art.freeProjection.rotation)):normal.clone().normalize()
      for(let i=0;i<verts.count;i+=3){
        const nx=(normals.getX(i)+normals.getX(i+1)+normals.getX(i+2))/3
        const ny=(normals.getY(i)+normals.getY(i+1)+normals.getY(i+2))/3
@@ -104,17 +105,47 @@ function RegionDecal({target,anchor,art,region}:{target:THREE.Mesh;anchor:THREE.
    }
    // These GLB regions project from an inverted facing direction.
    // Flip the UVs only so uploaded text and logos stay readable.
-   if((['tip','vamp','quarterLeft','swooshLeft','tongue'] as AF1RegionId[]).includes(region)){
+   if(!(art.mode==='free'&&art.freeProjection)&&(['tip','vamp','quarterLeft','swooshLeft','tongue'] as AF1RegionId[]).includes(region)){
      const uv=decal.getAttribute('uv')
      for(let i=0;i<uv.count;i++)uv.setX(i,1-uv.getX(i))
      uv.needsUpdate=true
    }
    return decal
- },[target,anchor,region,art.x,art.y,art.size,art.rotation,art.aspect,art.mode])
+ },[target,anchor,region,art.x,art.y,art.size,art.rotation,art.aspect,art.mode,art.freeProjection])
  useEffect(()=>()=>geometry.dispose(),[geometry])
  return <mesh geometry={geometry} renderOrder={10}><meshBasicMaterial map={texture} transparent alphaTest={.02} depthTest depthWrite={false} polygonOffset polygonOffsetFactor={-8} toneMapped={false} side={THREE.DoubleSide}/></mesh>
 }
-function RealAF1({colors,onSelect,artworks,finishes}:{colors:AF1RegionColors;onSelect:(id:AF1RegionId)=>void;artworks:ArtworkMap;finishes:FinishMap}){
+type PlacementFrame={x:number;y:number;width:number;height:number}
+type PlacementRequest={id:AF1RegionId;frame:PlacementFrame;serial:number}
+function FreePlacementProjector({model,request,onProject}:{model:THREE.Object3D;request:PlacementRequest|null;onProject:(id:AF1RegionId,p:FreeProjection|null)=>void}){
+ const {camera,gl}=useThree()
+ useEffect(()=>{
+   if(!request)return
+   const rect=gl.domElement.getBoundingClientRect()
+   const {frame,id}=request
+   const px=rect.left+rect.width*(frame.x+frame.width/2)/100
+   const py=rect.top+rect.height*(frame.y+frame.height/2)/100
+   const cursor=new THREE.Vector2((px-rect.left)/rect.width*2-1,-((py-rect.top)/rect.height*2-1))
+   const raycaster=new THREE.Raycaster()
+   raycaster.setFromCamera(cursor,camera)
+   model.updateWorldMatrix(true,true)
+   const hit=raycaster.intersectObject(model,true).find(item=>regionForObject(item.object))
+   if(!hit){onProject(id,null);return}
+   const distance=camera.position.distanceTo(hit.point)
+   const perspective=camera as THREE.PerspectiveCamera
+   const visibleHeight=perspective.isPerspectiveCamera?2*distance*Math.tan(THREE.MathUtils.degToRad(perspective.fov)/2):3.5
+   const width=visibleHeight*rect.width/rect.height*frame.width/100
+   const height=visibleHeight*frame.height/100
+   const p:FreeProjection={
+     position:hit.point.toArray() as [number,number,number],
+     rotation:camera.quaternion.toArray() as [number,number,number,number],
+     width,height,depth:Math.max(.4,distance*.7)
+   }
+   onProject(id,p)
+ },[camera,gl,model,request,onProject])
+ return null
+}
+function RealAF1({colors,onSelect,artworks,finishes,placementRequest,onProject}:{colors:AF1RegionColors;onSelect:(id:AF1RegionId)=>void;artworks:ArtworkMap;finishes:FinishMap;placementRequest:PlacementRequest|null;onProject:(id:AF1RegionId,p:FreeProjection|null)=>void}){
  const {scene}=useGLTF(MODEL_URL)
  const model=useMemo(()=>{
   const root=scene.clone(true)
@@ -125,9 +156,9 @@ function RealAF1({colors,onSelect,artworks,finishes}:{colors:AF1RegionColors;onS
  const regionMeshes=useMemo(()=>{const found={} as Partial<Record<AF1RegionId,THREE.Mesh>>;model.traverse(o=>{if(o instanceof THREE.Mesh){const r=regionForObject(o);if(r&&!found[r])found[r]=o}});return found},[model])
  useEffect(()=>{model.traverse(object=>{if(!(object instanceof THREE.Mesh))return;const region=regionForObject(object);if(!region)return;const ms=Array.isArray(object.material)?object.material:[object.material];ms.forEach(m=>applyPaint(m,finishes[region]))})},[model,colors,finishes])
  useEffect(()=>()=>{model.traverse(o=>{if(o instanceof THREE.Mesh){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose())}})},[model])
- return <group><primitive object={model} onPointerDown={(e:any)=>{const hit=e.intersections?.[0]?.object as THREE.Object3D|undefined;if(!hit)return;const r=regionForObject(hit);if(r){e.stopPropagation();onSelect(r)}}}/>{Object.entries(artworks).flatMap(([id,art])=>{
+ return <group><FreePlacementProjector model={model} request={placementRequest} onProject={onProject}/><primitive object={model} onPointerDown={(e:any)=>{const hit=e.intersections?.[0]?.object as THREE.Object3D|undefined;if(!hit)return;const r=regionForObject(hit);if(r){e.stopPropagation();onSelect(r)}}}/>{Object.entries(artworks).flatMap(([id,art])=>{
    const anchor=regionMeshes[id as AF1RegionId]
-   if(!anchor||!art)return []
+   if(!anchor||!art||(art.mode==='free'&&!art.freeProjection))return []
    const regions=art.mode==='free'?Object.keys(regionMeshes) as AF1RegionId[]:art.mode==='multiple'&&art.regions?.length?art.regions:[id as AF1RegionId]
    return regions.flatMap(region=>{const target=regionMeshes[region];return target?[<RegionDecal key={id+'-'+region} anchor={anchor} target={target} art={art} region={region}/>]:[]})
  })}</group>
@@ -140,6 +171,15 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
  const palette=['#ffffff','#111111','#9ca3af','#d1d5db','#ff321c','#ff6b00','#ffb000','#ffd500','#39e600','#38c6d4','#2563eb','#7c22e8','#f52a87','#9a4c16','#c99d69','#f6dec3','#fffde5','#b8f5cb','#b9ddf5','#c9b6f4','#e5b7f3','#f2bfd7','#17172f','#11254a','#0d4176','#5c3c91','#ed4058','#2ac783','#ff9600','#ef4937']
  const [artworks,setArtworks]=useState<ArtworkMap>({})
  const [placementMode,setPlacementMode]=useState<'single'|'multiple'|'free'>('single')
+ const [freeEdit,setFreeEdit]=useState<AF1RegionId|null>(null)
+ const [shiftHeld,setShiftHeld]=useState(false)
+ useEffect(()=>{const onDown=(e:KeyboardEvent)=>{if(e.key==='Shift')setShiftHeld(true)},onUp=(e:KeyboardEvent)=>{if(e.key==='Shift')setShiftHeld(false)},onBlur=()=>setShiftHeld(false);window.addEventListener('keydown',onDown);window.addEventListener('keyup',onUp);window.addEventListener('blur',onBlur);return()=>{window.removeEventListener('keydown',onDown);window.removeEventListener('keyup',onUp);window.removeEventListener('blur',onBlur)}},[])
+ const [freeFrame,setFreeFrame]=useState({x:7,y:28,width:24})
+ const [placementRequest,setPlacementRequest]=useState<PlacementRequest|null>(null)
+ const [placementError,setPlacementError]=useState('')
+ const stageRef=useRef<HTMLDivElement>(null)
+ const imageRef=useRef<HTMLImageElement>(null)
+ const dragRef=useRef<{x:number;y:number;initial:{x:number;y:number;width:number};resize:boolean}|null>(null)
  const [finishes,setFinishes]=useState<FinishMap>(()=>makeFinishes(colors))
  const [paintTab,setPaintTab]=useState<'base'|'finish'>('base')
  const [preset,setPreset]=useState<Record<string,string>>({})
@@ -165,15 +205,22 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
   setPreset({})
  }
  const art=artworks[selected]
+ const freeArt=freeEdit?artworks[freeEdit]:undefined
+ const onProject=useCallback((id:AF1RegionId,p:FreeProjection|null)=>{if(!p){setPlacementError('Move the center of your image over the shoe, then clip again.');return}setArtworks(v=>v[id]?{...v,[id]:{...v[id]!,freeProjection:p}}:v);setFreeEdit(null);setPlacementError('')},[])
+ const clipArtwork=()=>{if(!freeEdit||!imageRef.current||!stageRef.current)return;const stage=stageRef.current.getBoundingClientRect(),image=imageRef.current.getBoundingClientRect();setPlacementRequest(v=>({id:freeEdit,frame:{x:(image.left-stage.left)/stage.width*100,y:(image.top-stage.top)/stage.height*100,width:image.width/stage.width*100,height:image.height/stage.height*100},serial:(v?.serial??0)+1}))}
+ const startDrag=(e:import('react').PointerEvent<HTMLDivElement>,resize:boolean)=>{if(!e.shiftKey&&!resize)return;e.preventDefault();e.stopPropagation();e.currentTarget.setPointerCapture(e.pointerId);dragRef.current={x:e.clientX,y:e.clientY,initial:{...freeFrame},resize}}
+ const moveDrag=(e:import('react').PointerEvent<HTMLDivElement>)=>{if(!dragRef.current||!stageRef.current)return;e.preventDefault();e.stopPropagation();const {x,y,initial,resize}=dragRef.current,rect=stageRef.current.getBoundingClientRect(),dx=(e.clientX-x)/rect.width*100,dy=(e.clientY-y)/rect.height*100;setFreeFrame(resize?{...initial,width:Math.max(5,Math.min(120,initial.width+dx))}:{...initial,x:initial.x+dx,y:initial.y+dy})}
+ const stopDrag=()=>{dragRef.current=null}
  const patch=(p:Partial<Artwork3D>)=>setArtworks(v=>v[selected]?{...v,[selected]:{...v[selected]!,...p}}:v)
- const upload=(f:File)=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=()=>{const src=String(r.result);const img=new Image();img.onload=()=>setArtworks(v=>({...v,[selected]:{src,name:f.name,size:.38,x:0,y:0,rotation:0,aspect:img.naturalWidth/Math.max(img.naturalHeight,1),mode:placementMode,regions:[selected]}}));img.src=src};r.readAsDataURL(f)}
+ const upload=(f:File)=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=()=>{const src=String(r.result);const img=new Image();img.onload=()=>{if(placementMode==='free'){setFreeFrame({x:7,y:28,width:24});setFreeEdit(selected);setPlacementError('')}setArtworks(v=>({...v,[selected]:{src,name:f.name,size:.38,x:0,y:0,rotation:0,aspect:img.naturalWidth/Math.max(img.naturalHeight,1),mode:placementMode,regions:[selected],freeProjection:undefined}}))};img.src=src};r.readAsDataURL(f)}
  return <div className="af1-configurator">
   <div className="af1-parts"><h3>Shoe Parts</h3><p>Select an area to customize</p>{AF1_REGION_GROUPS.map(g=><section key={g.label}><span>{g.label}</span>{g.regions.map(id=><button key={id} className={selected===id?'active':''} onClick={()=>onSelect(id)}><i style={{background:colors[id]}}/>{AF1_REGION_LABELS[id]}</button>)}</section>)}</div>
-  <div className="preview-3d af1-real-preview"><div className="af1-history-buttons"><button disabled={!canUndo} onClick={undo} title="Undo (Ctrl/Cmd+Z)">↶ Undo</button><button disabled={!canRedo} onClick={redo} title="Redo (Ctrl/Cmd+Shift+Z)">↷ Redo</button></div>
-   <Canvas camera={{position:[3.8,2.3,4.8],fov:38}} shadows><color attach="background" args={['#17202d']}/><hemisphereLight args={['#ffffff','#52606f',0.85]}/><ambientLight intensity={0.38}/><directionalLight position={[5,6,6]} intensity={1.05}/><directionalLight position={[-5,4,4]} intensity={0.5}/><directionalLight position={[0,3,-6]} intensity={0.35}/><Suspense fallback={null}><RealAF1 colors={colors} onSelect={onSelect} artworks={artworks} finishes={finishes}/></Suspense><StudioOrbitControls/></Canvas>
+  <div ref={stageRef} className="preview-3d af1-real-preview" style={{position:'relative'}}><div className="af1-history-buttons"><button disabled={!canUndo} onClick={undo} title="Undo (Ctrl/Cmd+Z)">↶ Undo</button><button disabled={!canRedo} onClick={redo} title="Redo (Ctrl/Cmd+Shift+Z)">↷ Redo</button></div>
+   <Canvas camera={{position:[3.8,2.3,4.8],fov:38}} shadows><color attach="background" args={['#17202d']}/><hemisphereLight args={['#ffffff','#52606f',0.85]}/><ambientLight intensity={0.38}/><directionalLight position={[5,6,6]} intensity={1.05}/><directionalLight position={[-5,4,4]} intensity={0.5}/><directionalLight position={[0,3,-6]} intensity={0.35}/><Suspense fallback={null}><RealAF1 colors={colors} onSelect={onSelect} artworks={artworks} finishes={finishes} placementRequest={placementRequest} onProject={onProject}/></Suspense><StudioOrbitControls/></Canvas>
+   {freeEdit&&freeArt?.mode==='free'&&<><div style={{position:'absolute',left:0,top:0,right:0,bottom:0,pointerEvents:'none',zIndex:5}}><div onPointerDown={e=>startDrag(e,false)} onPointerMove={moveDrag} onPointerUp={stopDrag} onPointerCancel={stopDrag} style={{position:'absolute',left:freeFrame.x+'%',top:freeFrame.y+'%',width:freeFrame.width+'%',cursor:'move',pointerEvents:shiftHeld?'auto':'none',border:'2px dashed #37c6ff',touchAction:'none',userSelect:'none'}}><img ref={imageRef} src={freeArt.src} alt="Unclipped artwork" draggable={false} style={{display:'block',width:'100%',height:'auto',pointerEvents:'none'}}/><div onPointerDown={e=>{e.stopPropagation();startDrag(e,true)}} style={{position:'absolute',right:-9,bottom:-9,width:18,height:18,background:'#37c6ff',border:'2px solid white',borderRadius:4,cursor:'nwse-resize',pointerEvents:'auto'}} title="Drag to resize"/></div></div><div style={{position:'absolute',left:12,bottom:42,zIndex:7,background:'#0e1726',padding:10,borderRadius:8,display:'flex',flexDirection:'column',gap:6,color:'white'}}><span>Hold Shift + drag image · drag corner to resize</span><button onClick={clipArtwork} style={{background:'#137dc4',color:'white',padding:8,borderRadius:6}}>Clip to Shoe</button>{placementError&&<small style={{color:'#ffb0b0'}}>{placementError}</small>}</div></>}
    <div className="af1-view-hint">Drag to rotate · scroll to zoom · Shift + drag to move</div></div>
   <div className="af1-region-control"><div className="af1-selected-title"><i style={{background:colors[selected]}}/><div><h2>{label}</h2><span>Customize · 16-region system</span></div></div><div className="af1-paint-tabs"><button className={paintTab==='base'?'active':''} onClick={()=>setPaintTab('base')}>Base Color</button><button className={paintTab==='finish'?'active':''} onClick={()=>setPaintTab('finish')}>Finish</button></div>{paintTab==='base'?<><div className="af1-current-color"><input aria-label={label+' color'} type="color" value={colors[selected]} onChange={e=>{onColorChange(selected,e.target.value);patchFinish({primary:e.target.value})}}/><input className="af1-hex-input" aria-label={label+' hex color'} value={colors[selected].toUpperCase()} maxLength={7} onChange={e=>{const v=e.target.value.startsWith('#')?e.target.value:'#'+e.target.value;if(validHex(v)){onColorChange(selected,v);patchFinish({primary:v})}}}/></div><div className="af1-palette">{palette.map(color=><button key={color} aria-label={'Set '+label+' to '+color} className={colors[selected].toLowerCase()===color?'active':''} style={{background:color}} onClick={()=>{onColorChange(selected,color);patchFinish({primary:color})}}/>)}</div></>:<div className="af1-finish-panel"><h3>Respray Colors</h3><label>Primary Color<div className="af1-current-color"><input type="color" value={finish.primary} onChange={e=>{patchFinish({primary:e.target.value});onColorChange(selected,e.target.value)}}/><input className="af1-hex-input" aria-label="Primary hex color" value={finish.primary.toUpperCase()} maxLength={7} onChange={e=>{const v=e.target.value.startsWith('#')?e.target.value:'#'+e.target.value;if(validHex(v)){patchFinish({primary:v});onColorChange(selected,v)}}}/></div></label><label>Secondary Color<div className="af1-current-color"><input type="color" value={finish.secondary} onChange={e=>patchFinish({secondary:e.target.value})}/><input className="af1-hex-input" aria-label="Secondary hex color" value={finish.secondary.toUpperCase()} maxLength={7} onChange={e=>{const v=e.target.value.startsWith('#')?e.target.value:'#'+e.target.value;if(validHex(v))patchFinish({secondary:v})}}/></div></label><h3>Color Groups</h3><div className="af1-finish-groups">{FINISH_GROUPS.map(g=><button key={g.id} className={finish.group===g.id?'active':''} onClick={()=>patchFinish({group:g.id})}>{g.label}<span>›</span></button>)}</div>{finish.group==='chameleon'&&<div className="af1-chameleon-presets"><label htmlFor="af1-chameleon-preset">Chameleon presets</label><select id="af1-chameleon-preset" value={preset[selected]||'Custom Chameleon'} onChange={e=>selectPreset(CHAMELEON_PRESETS.findIndex(p=>p.name===e.target.value))}>{CHAMELEON_PRESETS.map(p=><option key={p.name}>{p.name}</option>)}</select></div>}<p className="af1-finish-note">{finish.group==='chameleon'?'Primary and secondary colors drive the angle-shifting chameleon finish.':finish.group==='pearlescent'?'Primary color with a reflective pearl top-coat.':finish.group==='metallic'?'Primary color rendered with a reflective metallic finish.':finish.group==='matte'?'Primary color with a low-gloss matte surface.':'Select a finish group for this shoe region.'}</p></div>}
-   <div className="af1-artwork-controls"><h3>Artwork (Image / Logo)</h3><p>Place artwork on one section, selected sections, or freely across the shoe.</p><label>Artwork Placement<select value={art?.mode??placementMode} onChange={e=>{const mode=e.target.value as 'single'|'multiple'|'free';setPlacementMode(mode);if(art)patch({mode,regions:art.regions?.length?art.regions:[selected]})}}><option value="single">Single Region</option><option value="multiple">Multiple Regions</option><option value="free">Free Placement (whole shoe)</option></select></label>{art?.mode==='multiple'&&<div className="af1-multi-region"><p>Allow artwork on these sections:</p>{AF1_REGION_GROUPS.flatMap(g=>g.regions).map(region=><label key={region} style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}><input type="checkbox" checked={(art.regions??[selected]).includes(region)} onChange={e=>patch({regions:e.target.checked?Array.from(new Set([...(art.regions??[selected]),region])):(art.regions??[selected]).filter(r=>r!==region)})}/>{AF1_REGION_LABELS[region]}</label>)}</div>}<input ref={fileRef} className="file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{const f=e.target.files?.[0];if(f)upload(f);e.target.value=''}}/><button className="af1-upload" onClick={()=>fileRef.current?.click()}><b>⇧</b><span>{art?'Replace Image':'Upload Image'}</span><small>PNG, JPG or WebP</small></button>{art&&<><small title={art.name}>{art.name}</small><label className="slider-label">Size <b>{Math.round(art.size*100)}%</b><input type="range" min="8" max="100" value={art.size*100} onChange={e=>patch({size:+e.target.value/100})}/></label><label className="slider-label">Horizontal <b>{art.x}</b><input type="range" min="-100" max="100" value={art.x} onChange={e=>patch({x:+e.target.value})}/></label><label className="slider-label">Vertical <b>{art.y}</b><input type="range" min="-100" max="100" value={art.y} onChange={e=>patch({y:+e.target.value})}/></label><label className="slider-label">Rotation <b>{art.rotation}°</b><input type="range" min="-180" max="180" value={art.rotation} onChange={e=>patch({rotation:+e.target.value})}/></label><button className="danger" onClick={()=>setArtworks(v=>{const n={...v};delete n[selected];return n})}>Remove artwork</button></>}</div>
+   <div className="af1-artwork-controls"><h3>Artwork (Image / Logo)</h3><p>Place artwork on one section, selected sections, or freely across the shoe.</p><label>Artwork Placement<select value={art?.mode??placementMode} onChange={e=>{const mode=e.target.value as 'single'|'multiple'|'free';setPlacementMode(mode);if(art){patch({mode,regions:art.regions?.length?art.regions:[selected]});setFreeEdit(mode==='free'?selected:null);setPlacementError('')}}}><option value="single">Single Region</option><option value="multiple">Multiple Regions</option><option value="free">Free Placement (whole shoe)</option></select></label>{art?.mode==='multiple'&&<div className="af1-multi-region"><p>Allow artwork on these sections:</p>{AF1_REGION_GROUPS.flatMap(g=>g.regions).map(region=><label key={region} style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}><input type="checkbox" checked={(art.regions??[selected]).includes(region)} onChange={e=>patch({regions:e.target.checked?Array.from(new Set([...(art.regions??[selected]),region])):(art.regions??[selected]).filter(r=>r!==region)})}/>{AF1_REGION_LABELS[region]}</label>)}</div>}{art?.mode==='free'&&art.freeProjection&&freeEdit!==selected&&<button onClick={()=>{setFreeEdit(selected);setFreeFrame({x:7,y:28,width:24})}}>Edit Free Placement</button>}<input ref={fileRef} className="file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{const f=e.target.files?.[0];if(f)upload(f);e.target.value=''}}/><button className="af1-upload" onClick={()=>fileRef.current?.click()}><b>⇧</b><span>{art?'Replace Image':'Upload Image'}</span><small>PNG, JPG or WebP</small></button>{art&&<><small title={art.name}>{art.name}</small><label className="slider-label">Size <b>{Math.round(art.size*100)}%</b><input type="range" min="8" max="100" value={art.size*100} onChange={e=>patch({size:+e.target.value/100})}/></label><label className="slider-label">Horizontal <b>{art.x}</b><input type="range" min="-100" max="100" value={art.x} onChange={e=>patch({x:+e.target.value})}/></label><label className="slider-label">Vertical <b>{art.y}</b><input type="range" min="-100" max="100" value={art.y} onChange={e=>patch({y:+e.target.value})}/></label><label className="slider-label">Rotation <b>{art.rotation}°</b><input type="range" min="-180" max="180" value={art.rotation} onChange={e=>patch({rotation:+e.target.value})}/></label><button className="danger" onClick={()=>setArtworks(v=>{const n={...v};delete n[selected];return n})}>Remove artwork</button></>}</div>
    <button className="af1-reset-region" onClick={resetRegion}>Reset {label}</button><button className="af1-reset-all" onClick={resetAll}>Reset all colors</button></div>
  </div>
 }
