@@ -83,6 +83,10 @@ function RegionDecal({target,anchor,model,art,region}:{target:THREE.Mesh;anchor:
    const soleRegion=(['midsole','midsoleStripe','midsoleLogo','outsole'] as AF1RegionId[]).includes(region)
    const projectionDepth=art.mode==='free'&&art.freeProjection?art.freeProjection.depth:art.mode==='single'||!art.mode?depth:soleRegion?Math.max(Math.min(depth,largest*.4),.08):Math.max(depth,largest*2)
    const decal=new DecalGeometry(target,position,rotation,new THREE.Vector3(width,height,projectionDepth))
+   // DecalGeometry returns vertices in the target mesh's LOCAL space. Free
+   // artwork is drawn alongside the world-space model, so transform once to
+   // world space before rendering or performing camera visibility raycasts.
+   if(art.mode==='free'&&art.freeProjection)decal.applyMatrix4(target.matrixWorld)
    if(art.mode==='free'&&art.freeProjection){
      // The image is projected in one shared camera-space plane. Use visibility
      // from its original placement camera, instead of rejecting curved toe/heel
@@ -104,13 +108,13 @@ function RegionDecal({target,anchor,model,art,region}:{target:THREE.Mesh;anchor:
          (vertices.getY(i)+vertices.getY(i+1)+vertices.getY(i+2))/3,
          (vertices.getZ(i)+vertices.getZ(i+1)+vertices.getZ(i+2))/3
        )
-       // DecalGeometry positions are in world coordinates for the shoe model.
+       // Free decal positions were transformed into world coordinates above.
        worldPoint.copy(centroid)
        n.set(
          (normals.getX(i)+normals.getX(i+1)+normals.getX(i+2))/3,
          (normals.getY(i)+normals.getY(i+1)+normals.getY(i+2))/3,
          (normals.getZ(i)+normals.getZ(i+1)+normals.getZ(i+2))/3
-       ).transformDirection(target.matrixWorld)
+       ).normalize()
        direction.copy(eye).sub(worldPoint)
        const distance=direction.length()
        if(distance<.001)continue
