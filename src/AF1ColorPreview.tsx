@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useLoader, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import StudioOrbitControls from './StudioOrbitControls'
@@ -204,7 +204,7 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
  }
  const art=artworks[selected]
  const freeArt=freeEdit?artworks[freeEdit]:undefined
- const onProject=(id:AF1RegionId,p:FreeProjection|null)=>{if(!p){setPlacementError('Move the center of your image over the shoe, then clip again.');return}setArtworks(v=>v[id]?{...v,[id]:{...v[id]!,freeProjection:p}}:v);setFreeEdit(null);setPlacementError('')}
+ const onProject=useCallback((id:AF1RegionId,p:FreeProjection|null)=>{if(!p){setPlacementError('Move the center of your image over the shoe, then clip again.');return}setArtworks(v=>v[id]?{...v,[id]:{...v[id]!,freeProjection:p}}:v);setFreeEdit(null);setPlacementError('')},[])
  const clipArtwork=()=>{if(!freeEdit||!imageRef.current||!stageRef.current)return;const stage=stageRef.current.getBoundingClientRect(),image=imageRef.current.getBoundingClientRect();setPlacementRequest(v=>({id:freeEdit,frame:{x:(image.left-stage.left)/stage.width*100,y:(image.top-stage.top)/stage.height*100,width:image.width/stage.width*100,height:image.height/stage.height*100},serial:(v?.serial??0)+1}))}
  const startDrag=(e:import('react').PointerEvent<HTMLDivElement>,resize:boolean)=>{if(!e.shiftKey&&!resize)return;e.preventDefault();e.stopPropagation();e.currentTarget.setPointerCapture(e.pointerId);dragRef.current={x:e.clientX,y:e.clientY,initial:{...freeFrame},resize}}
  const moveDrag=(e:import('react').PointerEvent<HTMLDivElement>)=>{if(!dragRef.current||!stageRef.current)return;e.preventDefault();e.stopPropagation();const {x,y,initial,resize}=dragRef.current,rect=stageRef.current.getBoundingClientRect(),dx=(e.clientX-x)/rect.width*100,dy=(e.clientY-y)/rect.height*100;setFreeFrame(resize?{...initial,width:Math.max(5,Math.min(120,initial.width+dx))}:{...initial,x:initial.x+dx,y:initial.y+dy})}
