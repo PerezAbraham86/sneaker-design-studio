@@ -77,7 +77,31 @@ function RegionDecal({target,anchor,art,region}:{target:THREE.Mesh;anchor:THREE.
    const height=width/aspect
    const depth=Math.max(largest*.65,.08)
    position.addScaledVector(normal,.002)
-   const decal=new DecalGeometry(target,position,rotation,new THREE.Vector3(width,height,art.mode==='single'||!art.mode?depth:Math.max(depth,largest*2)))
+   // Sole meshes wrap around the entire shoe. A deep box projects through
+   // their far/underside faces and creates duplicate or stretched artwork.
+   const soleRegion=(['midsole','midsoleStripe','midsoleLogo','outsole'] as AF1RegionId[]).includes(region)
+   const projectionDepth=art.mode==='single'||!art.mode?depth:soleRegion?Math.max(Math.min(depth,largest*.4),.08):Math.max(depth,largest*2)
+   const decal=new DecalGeometry(target,position,rotation,new THREE.Vector3(width,height,projectionDepth))
+   if(soleRegion){
+     const verts=decal.getAttribute('position')
+     const normals=decal.getAttribute('normal')
+     const uv=decal.getAttribute('uv')
+     const indices:number[]=[]
+     // Preserve only the side facing the image projector, not its opposite
+     // side or the lower sole that would otherwise receive a ghost image.
+     const facing=normal.clone().normalize()
+     for(let i=0;i<verts.count;i+=3){
+       const nx=(normals.getX(i)+normals.getX(i+1)+normals.getX(i+2))/3
+       const ny=(normals.getY(i)+normals.getY(i+1)+normals.getY(i+2))/3
+       const nz=(normals.getZ(i)+normals.getZ(i+1)+normals.getZ(i+2))/3
+       const localNormal=new THREE.Vector3(nx,ny,nz).transformDirection(target.matrixWorld)
+       if(localNormal.dot(facing)>.15)indices.push(i,i+1,i+2)
+     }
+     decal.setIndex(indices)
+     // DecalGeometry is non-indexed; an index selects safe visible triangles
+     // while retaining its original UV mapping and artwork proportions.
+     void uv
+   }
    // These GLB regions project from an inverted facing direction.
    // Flip the UVs only so uploaded text and logos stay readable.
    if((['tip','vamp','quarterLeft','swooshLeft','tongue'] as AF1RegionId[]).includes(region)){
