@@ -119,7 +119,7 @@ function RegionDecal({target,anchor,model,art,region}:{target:THREE.Mesh;anchor:
        // normal is nearly perpendicular to the placement camera.
        const frontRegion=region==='tip'||region==='vamp'
        const heelRegion=region==='backtab'
-       const minFacing=frontRegion?-.13:heelRegion?-.035:.02
+       const minFacing=frontRegion?-.20:heelRegion?-.08:soleRegion?-.06:.02
        if(n.dot(direction)<distance*minFacing)continue
        direction.negate().normalize()
        ray.set(eye,direction)
