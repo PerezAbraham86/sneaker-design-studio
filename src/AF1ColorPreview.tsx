@@ -86,22 +86,22 @@ function RegionDecal({target,anchor,art,region}:{target:THREE.Mesh;anchor:THREE.
    if(soleRegion||(art.mode==='free'&&art.freeProjection)){
      const verts=decal.getAttribute('position')
      const normals=decal.getAttribute('normal')
-     const uv=decal.getAttribute('uv')
      const indices:number[]=[]
-     // Preserve only the side facing the image projector, not its opposite
-     // side or the lower sole that would otherwise receive a ghost image.
-     const facing=art.mode==='free'&&art.freeProjection?new THREE.Vector3(0,0,1).applyQuaternion(new THREE.Quaternion(...art.freeProjection.rotation)):normal.clone().normalize()
+     // Restrict projection to forward-facing triangles, with tighter clipping
+     // around the toe and heel to avoid stretching around curved edges.
+     const facing=art.mode==='free'&&art.freeProjection?new THREE.Vector3(0,0,1).applyQuaternion(new THREE.Quaternion(...art.freeProjection.rotation)).normalize():normal.clone().normalize()
+     const frontBackRegion=region==='tip'||region==='backtab'
+     const threshold=art.mode==='free'&&art.freeProjection?(frontBackRegion?.55:soleRegion?.35:.25):.15
      for(let i=0;i<verts.count;i+=3){
        const nx=(normals.getX(i)+normals.getX(i+1)+normals.getX(i+2))/3
        const ny=(normals.getY(i)+normals.getY(i+1)+normals.getY(i+2))/3
        const nz=(normals.getZ(i)+normals.getZ(i+1)+normals.getZ(i+2))/3
        const localNormal=new THREE.Vector3(nx,ny,nz).transformDirection(target.matrixWorld)
-       if(localNormal.dot(facing)>.15)indices.push(i,i+1,i+2)
+       if(art.mode==='free'&&art.freeProjection&&soleRegion&&localNormal.y<-.2)continue
+       if(localNormal.dot(facing)>threshold)indices.push(i,i+1,i+2)
      }
      decal.setIndex(indices)
-     // DecalGeometry is non-indexed; an index selects safe visible triangles
-     // while retaining its original UV mapping and artwork proportions.
-     void uv
+     // Keep the original decal UVs and use only triangles facing the camera.
    }
    // These GLB regions project from an inverted facing direction.
    // Flip the UVs only so uploaded text and logos stay readable.
@@ -139,7 +139,7 @@ function FreePlacementProjector({model,request,onProject}:{model:THREE.Object3D;
    const p:FreeProjection={
      position:hit.point.toArray() as [number,number,number],
      rotation:camera.quaternion.toArray() as [number,number,number,number],
-     width,height,depth:Math.max(.4,distance*.7)
+     width,height,depth:Math.max(.16,Math.min(.55,distance*.28))
    }
    onProject(id,p)
  },[camera,gl,model,request,onProject])
