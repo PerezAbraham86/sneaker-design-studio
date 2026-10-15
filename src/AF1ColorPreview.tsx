@@ -12,7 +12,7 @@ const MODEL_URL='/models/AF1-16regions(2).glb'
 const normalizeName=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]/g,'')
 const REGION_BY_MESH:Record<string,AF1RegionId>={tip:'tip',vamp:'vamp',eyestay:'eyestay',quarterleft:'quarterLeft',quarterright:'quarterRight',swooshleft:'swooshLeft',swooshright:'swooshRight',tongue:'tongue',laces:'laces',liningleft:'liningLeft',liningright:'liningRight',backtab:'backtab',midsole:'midsole',midsolestripe:'midsoleStripe',midsolelogo:'midsoleLogo',outsole:'outsole'}
 
-type FreeProjection={position:[number,number,number];rotation:[number,number,number,number];width:number;height:number;depth:number}
+type FreeProjection={position:[number,number,number];rotation:[number,number,number,number];width:number;height:number;depth:number;eye:[number,number,number]}
 type Artwork3D={src:string;name:string;size:number;x:number;y:number;rotation:number;aspect:number;mode?:'single'|'multiple'|'free';regions?:AF1RegionId[];freeProjection?:FreeProjection}
 type ArtworkMap=Partial<Record<AF1RegionId,Artwork3D>>
 type FinishGroup='classic'|'matte'|'metallic'|'metals'|'pearlescent'|'chameleon'|'chrome'
@@ -27,7 +27,7 @@ const makeFinishes=(colors:AF1RegionColors)=>Object.fromEntries(Object.entries(c
 
 function regionForObject(object:THREE.Object3D):AF1RegionId|undefined{let current:THREE.Object3D|null=object;while(current){const region=REGION_BY_MESH[normalizeName(current.name)];if(region)return region;current=current.parent}}
 
-function RegionDecal({target,anchor,art,region}:{target:THREE.Mesh;anchor:THREE.Mesh;art:Artwork3D;region:AF1RegionId}){
+function RegionDecal({target,anchor,model,art,region}:{target:THREE.Mesh;anchor:THREE.Mesh;model:THREE.Object3D;art:Artwork3D;region:AF1RegionId}){
  const texture=useLoader(THREE.TextureLoader,art.src)
  useEffect(()=>{texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true},[texture])
  const geometry=useMemo(()=>{
@@ -77,31 +77,66 @@ function RegionDecal({target,anchor,art,region}:{target:THREE.Mesh;anchor:THREE.
    const width=art.mode==='free'&&art.freeProjection?art.freeProjection.width:Math.min(panelWidth,panelHeight*aspect)*art.size
    const height=art.mode==='free'&&art.freeProjection?art.freeProjection.height:width/aspect
    const depth=Math.max(largest*.65,.08)
-   position.addScaledVector(normal,.002)
+   if(!(art.mode==='free'&&art.freeProjection))position.addScaledVector(normal,.002)
    // Sole meshes wrap around the entire shoe. A deep box projects through
    // their far/underside faces and creates duplicate or stretched artwork.
    const soleRegion=(['midsole','midsoleStripe','midsoleLogo','outsole'] as AF1RegionId[]).includes(region)
    const projectionDepth=art.mode==='free'&&art.freeProjection?art.freeProjection.depth:art.mode==='single'||!art.mode?depth:soleRegion?Math.max(Math.min(depth,largest*.4),.08):Math.max(depth,largest*2)
    const decal=new DecalGeometry(target,position,rotation,new THREE.Vector3(width,height,projectionDepth))
-   if(soleRegion||(art.mode==='free'&&art.freeProjection)){
+   if(art.mode==='free'&&art.freeProjection){
+     // The image is projected in one shared camera-space plane. Use visibility
+     // from its original placement camera, instead of rejecting curved toe/heel
+     // faces based on a single fixed normal angle or a shallow decal volume.
+     const vertices=decal.getAttribute('position')
+     const normals=decal.getAttribute('normal')
+     const eye=new THREE.Vector3(...art.freeProjection.eye)
+     const ray=new THREE.Raycaster()
+     ray.near=0
+     const accepted:number[]=[]
+     const centroid=new THREE.Vector3()
+     const n=new THREE.Vector3()
+     const worldPoint=new THREE.Vector3()
+     const direction=new THREE.Vector3()
+     model.updateWorldMatrix(true,true)
+     for(let i=0;i<vertices.count;i+=3){
+       centroid.set(
+         (vertices.getX(i)+vertices.getX(i+1)+vertices.getX(i+2))/3,
+         (vertices.getY(i)+vertices.getY(i+1)+vertices.getY(i+2))/3,
+         (vertices.getZ(i)+vertices.getZ(i+1)+vertices.getZ(i+2))/3
+       )
+       // DecalGeometry positions are in world coordinates for the shoe model.
+       worldPoint.copy(centroid)
+       n.set(
+         (normals.getX(i)+normals.getX(i+1)+normals.getX(i+2))/3,
+         (normals.getY(i)+normals.getY(i+1)+normals.getY(i+2))/3,
+         (normals.getZ(i)+normals.getZ(i+1)+normals.getZ(i+2))/3
+       ).transformDirection(target.matrixWorld)
+       direction.copy(eye).sub(worldPoint)
+       const distance=direction.length()
+       if(distance<.001||n.dot(direction)<distance*.02)continue
+       // Ignore triangles behind the toe, heel, outsole and other front-facing
+       // shoe meshes. This prevents a rear surface from receiving the same ink.
+       direction.negate().normalize()
+       ray.set(eye,direction)
+       ray.far=distance+.035
+       const visible=ray.intersectObject(model,true).find(h=>regionForObject(h.object))
+       if(!visible||visible.distance<distance-Math.max(.035,distance*.012))continue
+       if(soleRegion&&n.y<-.24)continue
+       accepted.push(i,i+1,i+2)
+     }
+     decal.setIndex(accepted)
+   }else if(soleRegion){
      const verts=decal.getAttribute('position')
      const normals=decal.getAttribute('normal')
      const indices:number[]=[]
-     // Restrict projection to forward-facing triangles, with tighter clipping
-     // around the toe and heel to avoid stretching around curved edges.
-     const facing=art.mode==='free'&&art.freeProjection?new THREE.Vector3(0,0,1).applyQuaternion(new THREE.Quaternion(...art.freeProjection.rotation)).normalize():normal.clone().normalize()
-     const frontBackRegion=region==='tip'||region==='backtab'
-     const threshold=art.mode==='free'&&art.freeProjection?(frontBackRegion?.55:soleRegion?.35:.25):.15
      for(let i=0;i<verts.count;i+=3){
        const nx=(normals.getX(i)+normals.getX(i+1)+normals.getX(i+2))/3
        const ny=(normals.getY(i)+normals.getY(i+1)+normals.getY(i+2))/3
        const nz=(normals.getZ(i)+normals.getZ(i+1)+normals.getZ(i+2))/3
        const localNormal=new THREE.Vector3(nx,ny,nz).transformDirection(target.matrixWorld)
-       if(art.mode==='free'&&art.freeProjection&&soleRegion&&localNormal.y<-.2)continue
-       if(localNormal.dot(facing)>threshold)indices.push(i,i+1,i+2)
+       if(localNormal.dot(normal)>.15)indices.push(i,i+1,i+2)
      }
      decal.setIndex(indices)
-     // Keep the original decal UVs and use only triangles facing the camera.
    }
    // These GLB regions project from an inverted facing direction.
    // Flip the UVs only so uploaded text and logos stay readable.
@@ -111,7 +146,7 @@ function RegionDecal({target,anchor,art,region}:{target:THREE.Mesh;anchor:THREE.
      uv.needsUpdate=true
    }
    return decal
- },[target,anchor,region,art.x,art.y,art.size,art.rotation,art.aspect,art.mode,art.freeProjection])
+ },[target,anchor,model,region,art.x,art.y,art.size,art.rotation,art.aspect,art.mode,art.freeProjection])
  useEffect(()=>()=>geometry.dispose(),[geometry])
  return <mesh geometry={geometry} renderOrder={10}><meshBasicMaterial map={texture} transparent alphaTest={.02} depthTest depthWrite={false} polygonOffset polygonOffsetFactor={-8} toneMapped={false} side={THREE.DoubleSide}/></mesh>
 }
@@ -139,7 +174,7 @@ function FreePlacementProjector({model,request,onProject}:{model:THREE.Object3D;
    const p:FreeProjection={
      position:hit.point.toArray() as [number,number,number],
      rotation:camera.quaternion.toArray() as [number,number,number,number],
-     width,height,depth:Math.max(.16,Math.min(.55,distance*.28))
+     width,height,depth:Math.max(.7,distance*1.2),eye:camera.position.toArray() as [number,number,number]
    }
    onProject(id,p)
  },[camera,gl,model,request,onProject])
@@ -160,7 +195,7 @@ function RealAF1({colors,onSelect,artworks,finishes,placementRequest,onProject}:
    const anchor=regionMeshes[id as AF1RegionId]
    if(!anchor||!art||(art.mode==='free'&&!art.freeProjection))return []
    const regions=art.mode==='free'?Object.keys(regionMeshes) as AF1RegionId[]:art.mode==='multiple'&&art.regions?.length?art.regions:[id as AF1RegionId]
-   return regions.flatMap(region=>{const target=regionMeshes[region];return target?[<RegionDecal key={id+'-'+region} anchor={anchor} target={target} art={art} region={region}/>]:[]})
+   return regions.flatMap(region=>{const target=regionMeshes[region];return target?[<RegionDecal key={id+'-'+region} anchor={anchor} target={target} model={model} art={art} region={region}/>]:[]})
  })}</group>
 }
 
