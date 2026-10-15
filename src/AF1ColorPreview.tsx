@@ -30,33 +30,53 @@ function RegionDecal({target,art}:{target:THREE.Mesh;art:Artwork3D}){
  const texture=useLoader(THREE.TextureLoader,art.src)
  useEffect(()=>{texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true},[texture])
  const geometry=useMemo(()=>{
-   if(!target.geometry.boundingBox)target.geometry.computeBoundingBox()
-   const box=target.geometry.boundingBox!.clone()
-   const center=box.getCenter(new THREE.Vector3())
-   const panel=box.getSize(new THREE.Vector3())
-   center.x+=(art.x/100)*panel.x*.45
-   center.y+=(art.y/100)*panel.y*.45
-
-   // Size is one uniform scale. Height is derived from the uploaded image's
-   // natural aspect ratio so artwork can never be stretched by the panel.
-   const aspect=Math.max(art.aspect,.01)
-   // Fit the complete image inside the usable panel footprint first, then
-   // apply one uniform scale. This preserves aspect ratio without making a
-   // portrait or landscape upload disappear because one panel axis is small.
-   const maxWidth=Math.max(panel.x*.9,.08)
-   const maxHeight=Math.max(panel.y*1.8,.08)
-   const fitWidth=Math.min(maxWidth,maxHeight*aspect)
-   const fitHeight=fitWidth/aspect
-   const width=fitWidth*art.size
-   const height=fitHeight*art.size
-   const depth=Math.max(panel.z*3,.08)
-
-   return new DecalGeometry(
-     target,
-     center,
-     new THREE.Euler(0,0,THREE.MathUtils.degToRad(art.rotation)),
-     new THREE.Vector3(width,height,depth)
+   // DecalGeometry expects WORLD-space projection coordinates; the GLB meshes
+   // are nested under a translated/scaled parent and have LOCAL bounding boxes.
+   target.updateWorldMatrix(true,false)
+   const bounds=new THREE.Box3().setFromObject(target)
+   const center=bounds.getCenter(new THREE.Vector3())
+   const extent=bounds.getSize(new THREE.Vector3())
+   const largest=Math.max(extent.x,extent.y,extent.z,.01)
+   const offset=new THREE.Vector3(art.x/100*extent.x*.35,art.y/100*extent.y*.35,0)
+   const aim=center.clone().add(offset)
+   // Choose a real face on this particular panel, rather than assuming the
+   // panel faces the camera or that the box center is on the shoe surface.
+   const directions=[
+     new THREE.Vector3(0,0,1),new THREE.Vector3(1,0,0),
+     new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,-1),
+     new THREE.Vector3(-1,0,0),new THREE.Vector3(0,-1,0)
+   ]
+   const raycaster=new THREE.Raycaster()
+   let hit:THREE.Intersection<THREE.Object3D>|undefined
+   let outward=new THREE.Vector3(0,0,1)
+   const materials=Array.isArray(target.material)?target.material:[target.material]
+   const sides=materials.map(m=>m.side)
+   materials.forEach(m=>{m.side=THREE.DoubleSide})
+   try{
+     for(const direction of directions){
+       const origin=aim.clone().addScaledVector(direction,largest*3+1)
+       raycaster.set(origin,direction.clone().negate())
+       const candidate=raycaster.intersectObject(target,false)[0]
+       if(candidate){hit=candidate;outward=direction;break}
+     }
+   }finally{materials.forEach((m,i)=>{m.side=sides[i]})}
+   const position=hit?hit.point.clone():aim
+   const normal=hit?.face?.normal.clone().transformDirection(target.matrixWorld).normalize()??outward
+   if(normal.dot(outward)<0)normal.negate()
+   const rotation=new THREE.Euler().setFromQuaternion(
+     new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal)
    )
+   rotation.z+=THREE.MathUtils.degToRad(art.rotation)
+   const aspect=Math.max(art.aspect,.01)
+   // Fit to the two longest dimensions of the actual world-space region.
+   const axes=[extent.x,extent.y,extent.z].sort((a,b)=>b-a)
+   const panelWidth=Math.max(axes[0]*.8,.08)
+   const panelHeight=Math.max(axes[1]*1.5,.08)
+   const width=Math.min(panelWidth,panelHeight*aspect)*art.size
+   const height=width/aspect
+   const depth=Math.max(largest*.65,.08)
+   position.addScaledVector(normal,.002)
+   return new DecalGeometry(target,position,rotation,new THREE.Vector3(width,height,depth))
  },[target,art.x,art.y,art.size,art.rotation,art.aspect])
  useEffect(()=>()=>geometry.dispose(),[geometry])
  return <mesh geometry={geometry} renderOrder={10}><meshBasicMaterial map={texture} transparent alphaTest={.02} depthTest depthWrite={false} polygonOffset polygonOffsetFactor={-8} toneMapped={false} side={THREE.DoubleSide}/></mesh>
