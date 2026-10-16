@@ -1,16 +1,16 @@
 import {useEffect,useRef,useState} from 'react'
 import type {AF1RegionColors,AF1RegionId} from './af1Regions'
 
-export function useDesignHistory<F,A>(
- colors:AF1RegionColors,finishes:F,artworks:A,
- setFinishes:(v:F)=>void,setArtworks:(v:A)=>void,
+export function useDesignHistory<F,A,S>(
+ colors:AF1RegionColors,finishes:F,artworks:A,surfaceStrokes:S,
+ setFinishes:(v:F)=>void,setArtworks:(v:A)=>void,setSurfaceStrokes:(v:S)=>void,
  onColorChange:(id:AF1RegionId,color:string)=>void
 ){
  const history=useRef<string[]>([])
  const redoStack=useRef<string[]>([])
  const ignoreNext=useRef(false)
  const [revision,setRevision]=useState(0)
- const snapshot=JSON.stringify({colors,finishes,artworks})
+ const snapshot=JSON.stringify({colors,finishes,artworks,surfaceStrokes})
  useEffect(()=>{
   if(ignoreNext.current){ignoreNext.current=false;return}
   if(history.current.at(-1)!==snapshot){
@@ -21,10 +21,11 @@ export function useDesignHistory<F,A>(
   }
  },[snapshot])
  const restore=(value:string)=>{
-  const saved=JSON.parse(value) as {colors:AF1RegionColors;finishes:F;artworks:A}
+  const saved=JSON.parse(value) as {colors:AF1RegionColors;finishes:F;artworks:A;surfaceStrokes?:S}
   ignoreNext.current=true
   setFinishes(saved.finishes)
   setArtworks(saved.artworks)
+  if(saved.surfaceStrokes!==undefined)setSurfaceStrokes(saved.surfaceStrokes)
   for(const id of Object.keys(saved.colors) as AF1RegionId[]){
    if(colors[id]!==saved.colors[id])onColorChange(id,saved.colors[id])
   }

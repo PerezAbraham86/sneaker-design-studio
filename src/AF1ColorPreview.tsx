@@ -210,7 +210,7 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
  const [finishes,setFinishes]=useState<FinishMap>(()=>makeFinishes(colors))
  const [paintTab,setPaintTab]=useState<'base'|'finish'>('base')
  const [preset,setPreset]=useState<Record<string,string>>({})
- const {undo,redo,canUndo,canRedo}=useDesignHistory(colors,finishes,artworks,setFinishes,setArtworks,onColorChange)
+ const {undo,redo,canUndo,canRedo}=useDesignHistory(colors,finishes,artworks,surfaceStrokes,setFinishes,setArtworks,setSurfaceStrokes,onColorChange)
  const finish=finishes[selected]
  const patchFinish=(p:Partial<FinishState>)=>setFinishes(v=>({...v,[selected]:{...v[selected],...p}}))
  const selectPreset=(index:number)=>{
@@ -229,6 +229,10 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
   onReset()
   setFinishes(makeFinishes(Object.fromEntries(Object.keys(colors).map(id=>[id,'#ffffff'])) as AF1RegionColors))
   setArtworks({})
+  setSurfaceStrokes([])
+  setActiveSurface([])
+  surfaceRef.current=[]
+  paintingRef.current=false
   setPreset({})
  }
  const art=artworks[selected]
@@ -288,7 +292,7 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
  const upload=(f:File)=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=()=>{const src=String(r.result);const img=new Image();img.onload=()=>{if(placementMode==='free'){setFreeFrame({x:7,y:28,width:24});setFreeEdit(selected);setPlacementError('')}setArtworks(v=>({...v,[selected]:{src,originalSrc:src,strokes:[],name:f.name,size:.38,x:0,y:0,rotation:0,aspect:img.naturalWidth/Math.max(img.naturalHeight,1),mode:placementMode,regions:[selected],freeProjection:undefined}}))};img.src=src};r.readAsDataURL(f)}
  return <div className="af1-configurator">
   <div className="af1-parts"><h3>Shoe Parts</h3><p>Select an area to customize</p>{AF1_REGION_GROUPS.map(g=><section key={g.label}><span>{g.label}</span>{g.regions.map(id=><button key={id} className={selected===id?'active':''} onClick={()=>onSelect(id)}><i style={{background:colors[id]}}/>{AF1_REGION_LABELS[id]}</button>)}</section>)}</div>
-  <div ref={stageRef} className="preview-3d af1-real-preview" style={{position:'relative'}}><div className="af1-history-buttons"><button disabled={!canUndo} onClick={undo} title="Undo (Ctrl/Cmd+Z)">↶ Undo</button><button disabled={!canRedo} onClick={redo} title="Redo (Ctrl/Cmd+Shift+Z)">↷ Redo</button></div>
+  <div ref={stageRef} className="preview-3d af1-real-preview" style={{position:'relative'}}><div className="af1-history-buttons"><button disabled={!surfaceStrokes.length&&!activeSurface.length} onClick={()=>{surfaceRef.current=[];paintingRef.current=false;setActiveSurface([]);setSurfaceStrokes([])}} title="Reset freehand drawing">↺ Reset</button><button disabled={!canUndo} onClick={undo} title="Undo (Ctrl/Cmd+Z)">↶ Undo</button><button disabled={!canRedo} onClick={redo} title="Redo (Ctrl/Cmd+Shift+Z)">↷ Redo</button></div>
    <Canvas camera={{position:[3.8,2.3,4.8],fov:38}} shadows><color attach="background" args={['#17202d']}/><hemisphereLight args={['#ffffff','#52606f',0.85]}/><ambientLight intensity={0.38}/><directionalLight position={[5,6,6]} intensity={1.05}/><directionalLight position={[-5,4,4]} intensity={0.5}/><directionalLight position={[0,3,-6]} intensity={0.35}/><Suspense fallback={null}><RealAF1 colors={colors} onSelect={onSelect} artworks={artworks} finishes={finishes} placementRequest={placementRequest} onProject={onProject} shoeDraw={shoeDraw} onSurfaceDown={onSurfaceDown} onSurfaceMove={onSurfaceMove} onSurfaceUp={onSurfaceUp} surfaceStrokes={surfaceStrokes} activeSurface={activeSurface}/></Suspense>{!shoeDraw&&<StudioOrbitControls/>}</Canvas>
    {freeEdit&&freeArt?.mode==='free'&&<><div style={{position:'absolute',left:0,top:0,right:0,bottom:0,pointerEvents:'none',zIndex:5}}><div onPointerDown={e=>startDrag(e,false)} onPointerMove={moveDrag} onPointerUp={stopDrag} onPointerCancel={stopDrag} style={{position:'absolute',left:freeFrame.x+'%',top:freeFrame.y+'%',width:freeFrame.width+'%',cursor:drawMode&&!shiftHeld?'crosshair':'move',pointerEvents:shiftHeld||drawMode?'auto':'none',border:'2px dashed #37c6ff',touchAction:'none',userSelect:'none'}}><img ref={imageRef} src={freeArt.src} alt="Unclipped artwork" draggable={false} style={{display:'block',width:'100%',height:'auto',pointerEvents:'none'}}/>{drawMode&&<canvas ref={drawCanvas} width={1024} height={Math.round(1024/freeArt.aspect)} onPointerDown={drawPoint} onPointerMove={e=>{if(drawing.current)drawPoint(e)}} onPointerUp={finishStroke} onPointerCancel={finishStroke} style={{position:'absolute',inset:0,width:'100%',height:'100%',touchAction:'none',pointerEvents:shiftHeld?'none':'auto'}}/>}<div onPointerDown={e=>{e.stopPropagation();startDrag(e,true)}} style={{position:'absolute',right:-9,bottom:-9,width:18,height:18,background:'#37c6ff',border:'2px solid white',borderRadius:4,cursor:'nwse-resize',pointerEvents:'auto'}} title="Drag to resize"/></div></div><div style={{position:'absolute',left:12,bottom:42,zIndex:7,background:'#0e1726',padding:10,borderRadius:8,display:'flex',flexDirection:'column',gap:6,color:'white'}}><span>{drawMode?'Draw over artwork · Shift to move':'Hold Shift + drag image · drag corner to resize'}</span><button onClick={clipArtwork} style={{background:'#137dc4',color:'white',padding:8,borderRadius:6}}>Clip to Shoe</button>{placementError&&<small style={{color:'#ffb0b0'}}>{placementError}</small>}</div></>}
    <div className="af1-view-hint">Drag to rotate · scroll to zoom · Shift + drag to move</div></div>
