@@ -120,7 +120,7 @@ function RegionDecal({target,anchor,art,region}:{target:THREE.Mesh;anchor:THREE.
 }
 type PlacementFrame={x:number;y:number;width:number;height:number}
 type PlacementRequest={id:AF1RegionId;frame:PlacementFrame;serial:number}
-function FreePlacementProjector({model,request,onProject}:{model:THREE.Object3D;request:PlacementRequest|null;onProject:(id:AF1RegionId,p:FreeProjection|null)=>void;shoeDraw:boolean;onSurfaceDown:(e:any)=>void;onSurfaceMove:(e:any)=>void;onSurfaceUp:()=>void;surfaceStrokes:SurfaceStroke[];activeSurface:SurfaceMark[]}){
+function FreePlacementProjector({model,request,onProject}:{model:THREE.Object3D;request:PlacementRequest|null;onProject:(id:AF1RegionId,p:FreeProjection|null)=>void}){
  const {camera,gl}=useThree()
  useEffect(()=>{
    if(!request)return
