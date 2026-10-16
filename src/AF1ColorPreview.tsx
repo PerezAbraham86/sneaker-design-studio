@@ -104,9 +104,8 @@ function RegionDecal({target,anchor,model,art,region}:{target:THREE.Mesh;anchor:
          (vertices.getY(i)+vertices.getY(i+1)+vertices.getY(i+2))/3,
          (vertices.getZ(i)+vertices.getZ(i+1)+vertices.getZ(i+2))/3
        )
-       // Decal geometry remains local for rendering. Convert only the sampled
-       // point to world space for camera visibility raycasts.
-       worldPoint.copy(centroid).applyMatrix4(target.matrixWorld)
+       // DecalGeometry positions are in world coordinates for the shoe model.
+       worldPoint.copy(centroid)
        n.set(
          (normals.getX(i)+normals.getX(i+1)+normals.getX(i+2))/3,
          (normals.getY(i)+normals.getY(i+1)+normals.getY(i+2))/3,
