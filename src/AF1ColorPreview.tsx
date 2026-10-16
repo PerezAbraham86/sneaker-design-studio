@@ -161,7 +161,7 @@ function SurfaceBrushDot({target,mark}:{target:THREE.Mesh;mark:SurfaceMark}){
  useEffect(()=>()=>geometry.dispose(),[geometry])
  return <mesh geometry={geometry} renderOrder={20}><meshBasicMaterial color={mark.color} side={THREE.DoubleSide} transparent opacity={1} depthWrite={false} polygonOffset polygonOffsetFactor={-12}/></mesh>
 }
-function RealAF1({colors,onSelect,artworks,finishes,placementRequest,onProject,shoeDraw,onSurfaceDown,onSurfaceMove,onSurfaceUp,surfaceStrokes,activeSurface}:{colors:AF1RegionColors;onSelect:(id:AF1RegionId)=>void;artworks:ArtworkMap;finishes:FinishMap;placementRequest:PlacementRequest|null;onProject:(id:AF1RegionId,p:FreeProjection|null)=>void}){
+function RealAF1({colors,onSelect,artworks,finishes,placementRequest,onProject,shoeDraw,onSurfaceDown,onSurfaceMove,onSurfaceUp,surfaceStrokes,activeSurface}:{colors:AF1RegionColors;onSelect:(id:AF1RegionId)=>void;artworks:ArtworkMap;finishes:FinishMap;placementRequest:PlacementRequest|null;onProject:(id:AF1RegionId,p:FreeProjection|null)=>void;shoeDraw:boolean;onSurfaceDown:(e:any)=>void;onSurfaceMove:(e:any)=>void;onSurfaceUp:()=>void;surfaceStrokes:SurfaceStroke[];activeSurface:SurfaceMark[]}){
  const {scene}=useGLTF(MODEL_URL)
  const model=useMemo(()=>{
   const root=scene.clone(true)
