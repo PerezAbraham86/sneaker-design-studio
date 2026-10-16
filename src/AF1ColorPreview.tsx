@@ -155,7 +155,7 @@ function SurfaceBrushDot({target,mark}:{target:THREE.Mesh;mark:SurfaceMark}){
   const orientation=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal)
   const rotation=new THREE.Euler().setFromQuaternion(orientation)
   const position=new THREE.Vector3(...mark.position).addScaledVector(normal,.002)
-  const radius=mark.size/900
+  const radius=mark.size/160
   return new DecalGeometry(target,position,rotation,new THREE.Vector3(radius,radius,Math.max(radius*.8,.025)))
  },[target,mark])
  useEffect(()=>()=>geometry.dispose(),[geometry])
@@ -249,22 +249,37 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
  const stamp=(e:any)=>{
    if(!paintingRef.current||e.shiftKey)return
    const mark=markFromEvent(e);if(!mark)return
-   const prev=surfaceRef.current[surfaceRef.current.length-1]
-   if(prev){
-     const distance=new THREE.Vector3(...mark.position).distanceTo(new THREE.Vector3(...prev.position))
-     if(distance<Math.max(brushSize/1800,.006))return
-   }
+   const previous=surfaceRef.current[surfaceRef.current.length-1]
    if(brushTool==='eraser'){
-     const radius=brushSize/500
+     const radius=brushSize/150
      setSurfaceStrokes(strokes=>strokes.map(s=>({marks:s.marks.filter(m=>new THREE.Vector3(...m.position).distanceTo(new THREE.Vector3(...mark.position))>radius)})).filter(s=>s.marks.length))
-   }else{
-     surfaceRef.current=[...surfaceRef.current,mark]
-     setActiveSurface(surfaceRef.current)
+     return
    }
+   if(!previous){surfaceRef.current=[mark];setActiveSurface([...surfaceRef.current]);return}
+   const start=new THREE.Vector3(...previous.position),finish=new THREE.Vector3(...mark.position)
+   const distance=start.distanceTo(finish)
+   const spacing=Math.max(.008,brushSize/400)
+   if(distance<spacing*.4)return
+   const count=Math.min(100,Math.ceil(distance/spacing))
+   const added:SurfaceMark[]=[]
+   for(let i=1;i<=count;i++){
+     const t=i/count
+     const p=start.clone().lerp(finish,t)
+     const normal=new THREE.Vector3(...previous.normal).lerp(new THREE.Vector3(...mark.normal),t).normalize()
+     added.push({...mark,position:p.toArray() as [number,number,number],normal:normal.toArray() as [number,number,number]})
+   }
+   surfaceRef.current=[...surfaceRef.current,...added]
+   setActiveSurface([...surfaceRef.current])
  }
  const onSurfaceDown=(e:any)=>{if(!shoeDraw)return;paintingRef.current=true;surfaceRef.current=[];e.target?.setPointerCapture?.(e.pointerId);stamp(e)}
  const onSurfaceMove=(e:any)=>{if(shoeDraw&&paintingRef.current)stamp(e)}
- const onSurfaceUp=()=>{if(surfaceRef.current.length)setSurfaceStrokes(v=>[...v,{marks:surfaceRef.current}]);surfaceRef.current=[];setActiveSurface([]);paintingRef.current=false}
+ const onSurfaceUp=()=>{
+   const completed=[...surfaceRef.current]
+   if(completed.length)setSurfaceStrokes(v=>[...v,{marks:completed}])
+   surfaceRef.current=[]
+   setActiveSurface([])
+   paintingRef.current=false
+ }
  const clipArtwork=()=>{if(!freeEdit||!imageRef.current||!stageRef.current)return;const stage=stageRef.current.getBoundingClientRect(),image=imageRef.current.getBoundingClientRect();setPlacementRequest(v=>({id:freeEdit,frame:{x:(image.left-stage.left)/stage.width*100,y:(image.top-stage.top)/stage.height*100,width:image.width/stage.width*100,height:image.height/stage.height*100},serial:(v?.serial??0)+1}))}
  const startDrag=(e:import('react').PointerEvent<HTMLDivElement>,resize:boolean)=>{if(!e.shiftKey&&!resize)return;e.preventDefault();e.stopPropagation();e.currentTarget.setPointerCapture(e.pointerId);dragRef.current={x:e.clientX,y:e.clientY,initial:{...freeFrame},resize}}
  const moveDrag=(e:import('react').PointerEvent<HTMLDivElement>)=>{if(!dragRef.current||!stageRef.current)return;e.preventDefault();e.stopPropagation();const {x,y,initial,resize}=dragRef.current,rect=stageRef.current.getBoundingClientRect(),dx=(e.clientX-x)/rect.width*100,dy=(e.clientY-y)/rect.height*100;setFreeFrame(resize?{...initial,width:Math.max(5,Math.min(120,initial.width+dx))}:{...initial,x:initial.x+dx,y:initial.y+dy})}
