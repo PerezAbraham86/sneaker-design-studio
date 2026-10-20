@@ -74,10 +74,51 @@ export function makePatternCanvas(p:RegionPattern,size=512):HTMLCanvasElement{
    for(const dx of [-unit*.16,unit*.16]){c.beginPath();c.arc(dx,0,unit*.23,.35,Math.PI*1.8);c.stroke()}
    c.restore();if(id==='ggSupreme'){c.fillStyle=accent;c.beginPath();c.arc(x+unit*.48,y+unit*.35,unit*.045,0,Math.PI*2);c.fill()}}
  }else if(id==='bandana'){
-  for(let j=-16;j<24;j++)for(let i=-16;i<24;i++){const x=i*unit*1.3+(j%2)*unit*.65,y=j*unit*1.3
-   c.save();c.translate(x,y);c.rotate(-.5);c.beginPath();c.moveTo(0,-unit*.4);c.bezierCurveTo(unit*.55,-unit*.2,unit*.35,unit*.35,0,unit*.4);c.bezierCurveTo(-unit*.35,unit*.28,-unit*.45,-unit*.2,0,-unit*.4);c.fillStyle=ink;c.fill()
-   c.scale(.62,.62);c.fillStyle=bg;c.fill();c.beginPath();c.arc(0,0,unit*.1,0,Math.PI*2);c.fillStyle=accent;c.fill();c.restore()
-   for(let k=0;k<5;k++){c.beginPath();c.arc(x+Math.cos(k*1.25)*unit*.52,y+Math.sin(k*1.25)*unit*.52,unit*.045,0,Math.PI*2);c.fillStyle=ink;c.fill()}}
+  // Traditional bandana-inspired paisley: layered hooked teardrops,
+  // scalloped floral rosettes, curling stems and small filler blossoms.
+  // All ornaments use the user's selected background, ink and accent.
+  const step=unit*2.45
+  const paisley=(x:number,y:number,angle:number,scale:number)=>{
+   c.save();c.translate(x,y);c.rotate(angle);c.scale(scale,scale)
+   const shape=()=>{
+    c.beginPath();c.moveTo(0,-unit*.86)
+    c.bezierCurveTo(unit*.76,-unit*.83,unit*.98,-unit*.1,unit*.65,unit*.47)
+    c.bezierCurveTo(unit*.31,unit*.96,-unit*.45,unit*.85,-unit*.66,unit*.27)
+    c.bezierCurveTo(-unit*.89,-unit*.27,-unit*.53,-unit*.76,0,-unit*.86)
+    c.closePath()
+   }
+   shape();c.fillStyle=ink;c.fill()
+   c.save();c.scale(.82,.82);shape();c.fillStyle=bg;c.fill();c.restore()
+   // Inner scrolling teardrop, with a tapered curling hook.
+   c.beginPath();c.moveTo(-unit*.18,-unit*.55)
+   c.bezierCurveTo(unit*.62,-unit*.57,unit*.69,unit*.18,unit*.28,unit*.42)
+   c.bezierCurveTo(-unit*.07,unit*.63,-unit*.43,unit*.28,-unit*.22,-unit*.08)
+   c.bezierCurveTo(-unit*.04,-unit*.30,unit*.30,-unit*.22,unit*.23,unit*.02)
+   c.strokeStyle=ink;c.lineWidth=unit*.085;c.lineCap='round';c.stroke()
+   // Fine scalloped outline, small petals and center seed.
+   for(let k=0;k<13;k++){const t=k*Math.PI*2/13
+    c.beginPath();c.arc(Math.cos(t)*unit*.46,Math.sin(t)*unit*.48,unit*.055,0,Math.PI*2)
+    c.fillStyle=accent;c.fill()
+   }
+   for(let k=0;k<7;k++){const t=k*Math.PI*2/7
+    c.beginPath();c.ellipse(Math.cos(t)*unit*.22,Math.sin(t)*unit*.22,unit*.13,unit*.075,t,0,Math.PI*2);c.fillStyle=ink;c.fill()
+   }
+   c.beginPath();c.arc(0,0,unit*.095,0,Math.PI*2);c.fillStyle=accent;c.fill()
+   c.restore()
+  }
+  const flower=(x:number,y:number,r:number)=>{
+   for(let k=0;k<8;k++){const t=k*Math.PI/4;c.beginPath();c.ellipse(x+Math.cos(t)*r*.7,y+Math.sin(t)*r*.7,r*.42,r*.26,t,0,Math.PI*2);c.fillStyle=ink;c.fill()}
+   c.beginPath();c.arc(x,y,r*.26,0,Math.PI*2);c.fillStyle=accent;c.fill()
+   for(let k=0;k<8;k++){const t=k*Math.PI/4;c.beginPath();c.arc(x+Math.cos(t)*r*1.4,y+Math.sin(t)*r*1.4,r*.09,0,Math.PI*2);c.fillStyle=ink;c.fill()}
+  }
+  for(let j=-10;j<16;j++)for(let i=-10;i<16;i++){
+   const x=i*step+(j%2)*step*.5,y=j*step
+   paisley(x,y,-.48+(i+j)%3*.22,.75)
+   flower(x+step*.54,y+step*.52,unit*.27)
+   flower(x-step*.3,y+step*.57,unit*.14)
+   // Delicate dotted border between large motifs.
+   for(let k=0;k<6;k++){c.beginPath();c.arc(x+step*.17+k*step*.07,y+step*.82+Math.sin(k*.8)*unit*.06,unit*.035,0,Math.PI*2);c.fillStyle=ink;c.fill()}
+  }
  }else if(id==='splatter'||id==='graffiti'){
   for(let i=0;i<420;i++){const x=rand(i,1)*size*3-size,y=rand(i,2)*size*3-size,r=unit*(.015+Math.pow(rand(i,3),5)*.24);c.fillStyle=i%3===0?ink:accent;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()
    if(i%17===0){c.strokeStyle=c.fillStyle;c.lineWidth=r*.3;c.beginPath();c.moveTo(x-r*2,y-r*3);c.lineTo(x+r*3,y+r*2);c.stroke()}}
