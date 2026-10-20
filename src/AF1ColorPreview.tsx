@@ -176,7 +176,7 @@ function RealAF1({colors,onSelect,artworks,finishes,patterns,placementRequest,on
  useEffect(()=>{
   model.traverse(object=>{if(!(object instanceof THREE.Mesh))return;const region=regionForObject(object);if(!region)return
    const maps=Array.isArray(object.material)?object.material:[object.material]
-   maps.forEach(m=>{if(!(m instanceof THREE.MeshStandardMaterial))return;const tex=patternTextures[region];m.map=tex??null;m.needsUpdate=true})
+   maps.forEach(m=>{if(!(m instanceof THREE.MeshStandardMaterial))return;const tex=patternTextures[region];m.map=tex??null;m.color.set(tex?'#ffffff':finishes[region].primary);m.needsUpdate=true})
   })
  },[model,patternTextures])
  useEffect(()=>()=>Object.values(patternTextures).forEach(t=>t?.dispose()),[patternTextures])
