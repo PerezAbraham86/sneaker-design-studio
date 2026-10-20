@@ -122,3 +122,17 @@ body{background:#07101a;color:#f8fafc}
 .af1-chameleon-presets{display:grid;gap:8px;margin-top:14px}
 .af1-chameleon-presets label{font-size:11px;color:#cbd5e1;font-weight:750}
 .af1-chameleon-presets select{width:100%;padding:10px;border:1px solid #344457;border-radius:7px;background:#101722;color:#f8fafc}
+
+/* Per-panel pattern texture selector */
+.af1-paint-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
+.af1-texture-panel>h3{font-size:13px;margin:12px 0 7px}
+.af1-texture-panel>p{font-size:11px;color:#98a8b7;line-height:1.5}
+.af1-texture-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.studio-only .af1-texture-tile{min-width:0;border:1px solid #394456;border-radius:8px;padding:4px;background:#101722;color:#dce5ec;display:flex;flex-direction:column;gap:5px;align-items:center;overflow:hidden;cursor:pointer}
+.studio-only .af1-texture-tile.active{border-color:#28cfff;box-shadow:0 0 0 2px #28cfff55}
+.af1-texture-tile img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:5px}
+.af1-texture-tile span{font-size:10px;line-height:1.2;text-align:center;min-height:25px}
+.af1-texture-options{border-top:1px solid #394456;padding-top:10px}
+.af1-texture-options label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;font-size:11px;color:#e4ecf4;flex-wrap:wrap}
+.af1-texture-options input[type=range]{width:100%}
+.af1-texture-options input[type=color]{width:45px;height:32px;border:0;background:transparent}
