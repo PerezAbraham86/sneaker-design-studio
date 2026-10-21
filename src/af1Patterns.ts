@@ -240,7 +240,7 @@ function splatterImageCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
  sc.drawImage(image,(image.naturalWidth-side)/2,(image.naturalHeight-side)/2,side,side,0,0,size,size)
  // Keep the colorful artwork's original palette. For monochrome styles,
  // blend the ink against editable foreground/background colors.
- if(p.id!=='splatter'){
+ if(p.id==='splatterBW'){
   const pixels=sc.getImageData(0,0,size,size)
   const bg=p.colors[0].match(/\w\w/g)!.map(v=>parseInt(v,16))
   const ink=p.colors[1].match(/\w\w/g)!.map(v=>parseInt(v,16))
