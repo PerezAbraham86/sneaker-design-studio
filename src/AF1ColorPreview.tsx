@@ -322,7 +322,7 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
  </div>
 }
 function PatternTile({item,active,onClick}:{item:{id:PatternId;label:string;category:string};active:boolean;onClick:()=>void}){
- const src=useMemo(()=>item.id==='bandana'?'/textures/bandana-paisley.png':makePatternCanvas(defaultPattern(item.id),96).toDataURL(),[item.id])
+ const src=useMemo(()=>item.id==='bandana'?'/textures/bandana-paisley.png':item.id==='digitalCamo'?'/textures/digital-camo.png':makePatternCanvas(defaultPattern(item.id),96).toDataURL(),[item.id])
  return <button className={'af1-texture-tile'+(active?' active':'')} onClick={onClick} title={item.category+' · '+item.label}><img src={src} alt={item.label}/><span>{item.label}</span></button>
 }
 useGLTF.preload(MODEL_URL)
