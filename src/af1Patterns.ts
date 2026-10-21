@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type {AF1RegionId} from './af1Regions'
-export type PatternId='none'|'leopard'|'neonLeopard'|'rainbowLeopard'|'whiteLeopard'|'miniLeopard'|'tiger'|'zebra'|'cow'|'snakeskin'|'camo'|'desertCamo'|'urbanCamo'|'digitalCamo'|'checker'|'plaid'|'houndstooth'|'stripes'|'polka'|'bandana'|'ggSupreme'|'monogram'|'splatter'|'graffiti'|'marble'|'flames'|'carbon'|'denim'|'leather'|'canvas'
+export type PatternId='none'|'leopard'|'neonLeopard'|'rainbowLeopard'|'whiteLeopard'|'miniLeopard'|'tiger'|'zebra'|'cow'|'snakeskin'|'camo'|'desertCamo'|'urbanCamo'|'digitalCamo'|'checker'|'plaid'|'houndstooth'|'stripes'|'polka'|'bandana'|'ggSupreme'|'monogram'|'splatter'|'splatterBW'|'splatterBlue'|'graffiti'|'marble'|'flames'|'carbon'|'denim'|'leather'|'canvas'
 export type RegionPattern={id:PatternId;colors:[string,string,string];scale:number;rotation:number;offsetX:number;offsetY:number}
 export type PatternMap=Partial<Record<AF1RegionId,RegionPattern>>
 export const PATTERNS:{id:PatternId;label:string;category:string}[]=[
@@ -8,10 +8,10 @@ export const PATTERNS:{id:PatternId;label:string;category:string}[]=[
 {id:'camo',label:'Woodland Camo',category:'Camouflage'},{id:'desertCamo',label:'Desert Camo',category:'Camouflage'},{id:'urbanCamo',label:'Urban Camo',category:'Camouflage'},{id:'digitalCamo',label:'Digital Camo',category:'Camouflage'},
 {id:'checker',label:'Checkerboard',category:'Geometric'},{id:'plaid',label:'Plaid',category:'Geometric'},{id:'houndstooth',label:'Houndstooth',category:'Geometric'},{id:'stripes',label:'Stripes',category:'Geometric'},{id:'polka',label:'Polka Dots',category:'Geometric'},
 {id:'bandana',label:'Bandana Paisley',category:'Designer Inspired'},{id:'ggSupreme',label:'GG Supreme (inspired)',category:'Designer Inspired'},{id:'monogram',label:'Luxury Monogram',category:'Designer Inspired'},
-{id:'splatter',label:'Paint Splatter',category:'Artistic'},{id:'graffiti',label:'Graffiti',category:'Artistic'},{id:'marble',label:'Marble',category:'Artistic'},{id:'flames',label:'Flames',category:'Artistic'},
+{id:'splatter',label:'Colorful Splatter',category:'Artistic'},{id:'splatterBW',label:'Black & White Splatter',category:'Artistic'},{id:'splatterBlue',label:'Blue Splatter',category:'Artistic'},{id:'graffiti',label:'Graffiti',category:'Artistic'},{id:'marble',label:'Marble',category:'Artistic'},{id:'flames',label:'Flames',category:'Artistic'},
 {id:'carbon',label:'Carbon Fiber',category:'Material'},{id:'denim',label:'Denim',category:'Material'},{id:'leather',label:'Leather Grain',category:'Material'},{id:'canvas',label:'Canvas',category:'Material'}
 ]
-export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='digitalCamo'?['#f0e4ba','#267447','#262323']:id==='leopard'?['#c49b60','#1c2018','#79583c']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='neonLeopard'?['#0b0b0b','#39ff14','#f000ff']:id==='rainbowLeopard'?['#ffc37d','#f000ff','#00b5ff']:id==='whiteLeopard'?['#ffffff','#171717','#b9b9b9']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
+export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='digitalCamo'?['#f0e4ba','#267447','#262323']:id==='leopard'?['#c49b60','#1c2018','#79583c']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatterBW'?['#ffffff','#000000','#888888']:id==='splatterBlue'?['#ffffff','#0066cc','#62c5fa']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='neonLeopard'?['#0b0b0b','#39ff14','#f000ff']:id==='rainbowLeopard'?['#ffc37d','#f000ff','#00b5ff']:id==='whiteLeopard'?['#ffffff','#171717','#b9b9b9']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
 
 /** Deterministic vector artwork. Canvas transforms are applied before drawing so
  * thumbnails and shoe maps use the exact same artwork and user colors. */
@@ -233,4 +233,31 @@ function ggImageCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
  for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
  c.restore();return canvas
 }
-export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):p.id==='ggSupreme'&&patternImage?ggImageCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
+function splatterImageCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
+ const source=document.createElement('canvas');source.width=source.height=size
+ const sc=source.getContext('2d')!
+ const side=Math.min(image.naturalWidth,image.naturalHeight)
+ sc.drawImage(image,(image.naturalWidth-side)/2,(image.naturalHeight-side)/2,side,side,0,0,size,size)
+ // Keep the colorful artwork's original palette. For monochrome styles,
+ // blend the ink against editable foreground/background colors.
+ if(p.id!=='splatter'){
+  const pixels=sc.getImageData(0,0,size,size)
+  const bg=p.colors[0].match(/\w\w/g)!.map(v=>parseInt(v,16))
+  const ink=p.colors[1].match(/\w\w/g)!.map(v=>parseInt(v,16))
+  for(let i=0;i<pixels.data.length;i+=4){
+   const r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2]
+   const darkness=1-(r+g+b)/765
+   const amount=Math.max(0,Math.min(1,darkness))
+   for(let j=0;j<3;j++)pixels.data[i+j]=Math.round(bg[j]*(1-amount)+ink[j]*amount)
+  }
+  sc.putImageData(pixels,0,0)
+ }
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=size
+ const c=canvas.getContext('2d')!;c.fillStyle=p.colors[0];c.fillRect(0,0,size,size)
+ c.save();c.translate(size/2,size/2);c.rotate(p.rotation*Math.PI/180)
+ const tile=size/Math.max(.15,Math.min(4,p.scale))
+ const dx=p.offsetX*size/8,dy=p.offsetY*size/8
+ for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
+ c.restore();return canvas
+}
+export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):p.id==='ggSupreme'&&patternImage?ggImageCanvas(p,patternImage):['splatter','splatterBW','splatterBlue'].includes(p.id)&&patternImage?splatterImageCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
