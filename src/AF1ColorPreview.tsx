@@ -172,9 +172,12 @@ function RealAF1({colors,onSelect,artworks,finishes,patterns,placementRequest,on
  },[scene])
  const regionMeshes=useMemo(()=>{const found={} as Partial<Record<AF1RegionId,THREE.Mesh>>;model.traverse(o=>{if(o instanceof THREE.Mesh){const r=regionForObject(o);if(r&&!found[r])found[r]=o}});return found},[model])
  useEffect(()=>{model.traverse(object=>{if(!(object instanceof THREE.Mesh))return;const region=regionForObject(object);if(!region)return;const ms=Array.isArray(object.material)?object.material:[object.material];ms.forEach(m=>applyPaint(m,finishes[region]))})},[model,colors,finishes])
- const [bandanaImage,setBandanaImage]=useState<HTMLImageElement|null>(null)
- useEffect(()=>{let cancelled=false;const img=new Image();img.onload=()=>{if(!cancelled)setBandanaImage(img)};img.onerror=()=>console.warn('Bandana texture image could not be loaded');img.src='/textures/bandana-paisley.png';return()=>{cancelled=true}},[])
- const patternTextures=useMemo(()=>Object.fromEntries(Object.entries(patterns).filter(([,p])=>p&&p.id!=='none').map(([id,p])=>[id,makePatternTexture(p!,p!.id==='bandana'?bandanaImage:undefined)])) as Partial<Record<AF1RegionId,THREE.CanvasTexture>>,[patterns,bandanaImage])
+ const [textureImages,setTextureImages]=useState<Partial<Record<'bandana'|'digitalCamo',HTMLImageElement>>>({})
+ useEffect(()=>{let cancelled=false;const sources=[['bandana','/textures/bandana-paisley.png'],['digitalCamo','/textures/digital-camo.png']] as const
+  sources.forEach(([id,url])=>{const img=new Image();img.onload=()=>{if(!cancelled)setTextureImages(prev=>({...prev,[id]:img}))};img.onerror=()=>console.warn('Texture image could not be loaded:',url);img.src=url})
+  return()=>{cancelled=true}
+ },[])
+ const patternTextures=useMemo(()=>Object.fromEntries(Object.entries(patterns).filter(([,p])=>p&&p.id!=='none').map(([id,p])=>[id,makePatternTexture(p!,p!.id==='bandana'?textureImages.bandana:p!.id==='digitalCamo'?textureImages.digitalCamo:undefined)])) as Partial<Record<AF1RegionId,THREE.CanvasTexture>>,[patterns,textureImages])
  useEffect(()=>{
   model.traverse(object=>{if(!(object instanceof THREE.Mesh))return;const region=regionForObject(object);if(!region)return
    const maps=Array.isArray(object.material)?object.material:[object.material]
@@ -319,7 +322,7 @@ export default function AF1ColorPreview({colors,selected,onSelect,onColorChange,
  </div>
 }
 function PatternTile({item,active,onClick}:{item:{id:PatternId;label:string;category:string};active:boolean;onClick:()=>void}){
- const src=useMemo(()=>item.id==='bandana'?'/textures/bandana-paisley.png':makePatternCanvas(defaultPattern(item.id),96).toDataURL(),[item.id])
+ const src=useMemo(()=>item.id==='bandana'?'/textures/bandana-paisley.png':item.id==='digitalCamo'?'/textures/digital-camo.png':makePatternCanvas(defaultPattern(item.id),96).toDataURL(),[item.id])
  return <button className={'af1-texture-tile'+(active?' active':'')} onClick={onClick} title={item.category+' · '+item.label}><img src={src} alt={item.label}/><span>{item.label}</span></button>
 }
 useGLTF.preload(MODEL_URL)
