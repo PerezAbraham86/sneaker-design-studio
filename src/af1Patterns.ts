@@ -209,4 +209,28 @@ function leopardCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
  for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
  c.restore();return canvas
 }
-export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
+function ggImageCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
+ const source=document.createElement('canvas');source.width=source.height=size
+ const sc=source.getContext('2d')!
+ // Use a square section at original aspect ratio, not the entire portrait wallpaper.
+ const side=Math.min(image.naturalWidth,image.naturalHeight)
+ const sx=(image.naturalWidth-side)/2,sy=(image.naturalHeight-side)/2
+ sc.drawImage(image,sx,sy,side,side,0,0,size,size)
+ const pixels=sc.getImageData(0,0,size,size)
+ const colors=p.colors.map(hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)))
+ for(let i=0;i<pixels.data.length;i+=4){
+  const r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2]
+  const brightness=(r+g+b)/3
+  const ink=Math.max(0,Math.min(1,(brightness-60)/130))
+  for(let j=0;j<3;j++)pixels.data[i+j]=Math.round(colors[1][j]*(1-ink)+colors[0][j]*ink)
+ }
+ sc.putImageData(pixels,0,0)
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=size
+ const c=canvas.getContext('2d')!;c.fillStyle=p.colors[0];c.fillRect(0,0,size,size)
+ c.save();c.translate(size/2,size/2);c.rotate(p.rotation*Math.PI/180)
+ const tile=size/Math.max(.15,Math.min(4,p.scale))
+ const dx=p.offsetX*size/8,dy=p.offsetY*size/8
+ for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
+ c.restore();return canvas
+}
+export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):p.id==='ggSupreme'&&patternImage?ggImageCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
