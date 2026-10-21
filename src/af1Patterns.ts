@@ -11,7 +11,7 @@ export const PATTERNS:{id:PatternId;label:string;category:string}[]=[
 {id:'splatter',label:'Paint Splatter',category:'Artistic'},{id:'graffiti',label:'Graffiti',category:'Artistic'},{id:'marble',label:'Marble',category:'Artistic'},{id:'flames',label:'Flames',category:'Artistic'},
 {id:'carbon',label:'Carbon Fiber',category:'Material'},{id:'denim',label:'Denim',category:'Material'},{id:'leather',label:'Leather Grain',category:'Material'},{id:'canvas',label:'Canvas',category:'Material'}
 ]
-export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='digitalCamo'?['#f0e4ba','#267447','#262323']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='neonLeopard'?['#0b0b0b','#39ff14','#f000ff']:id==='rainbowLeopard'?['#ffc37d','#f000ff','#00b5ff']:id==='whiteLeopard'?['#ffffff','#171717','#b9b9b9']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
+export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='digitalCamo'?['#f0e4ba','#267447','#262323']:id==='leopard'?['#c49b60','#1c2018','#79583c']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='neonLeopard'?['#0b0b0b','#39ff14','#f000ff']:id==='rainbowLeopard'?['#ffc37d','#f000ff','#00b5ff']:id==='whiteLeopard'?['#ffffff','#171717','#b9b9b9']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
 
 /** Deterministic vector artwork. Canvas transforms are applied before drawing so
  * thumbnails and shoe maps use the exact same artwork and user colors. */
@@ -185,4 +185,28 @@ function digitalCamoCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
  for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
  c.restore();return canvas
 }
-export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
+function leopardCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
+ const source=document.createElement('canvas');source.width=source.height=size
+ const sc=source.getContext('2d')!;sc.drawImage(image,0,0,size,size)
+ const pixels=sc.getImageData(0,0,size,size)
+ const colors=p.colors.map(hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)))
+ for(let i=0;i<pixels.data.length;i+=4){
+  const r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2]
+  const light=.2126*r+.7152*g+.0722*b
+  const middle=Math.max(0,Math.min(1,(light-45)/55))
+  const bright=Math.max(0,Math.min(1,(light-105)/70))
+  for(let j=0;j<3;j++){
+   const shaded=colors[1][j]*(1-middle)+colors[2][j]*middle
+   pixels.data[i+j]=Math.round(shaded*(1-bright)+colors[0][j]*bright)
+  }
+ }
+ sc.putImageData(pixels,0,0)
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=size
+ const c=canvas.getContext('2d')!;c.fillStyle=p.colors[0];c.fillRect(0,0,size,size)
+ c.save();c.translate(size/2,size/2);c.rotate(p.rotation*Math.PI/180)
+ const tile=size/Math.max(.15,Math.min(4,p.scale))
+ const dx=p.offsetX*size/8,dy=p.offsetY*size/8
+ for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
+ c.restore();return canvas
+}
+export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
