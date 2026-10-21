@@ -11,7 +11,7 @@ export const PATTERNS:{id:PatternId;label:string;category:string}[]=[
 {id:'splatter',label:'Paint Splatter',category:'Artistic'},{id:'graffiti',label:'Graffiti',category:'Artistic'},{id:'marble',label:'Marble',category:'Artistic'},{id:'flames',label:'Flames',category:'Artistic'},
 {id:'carbon',label:'Carbon Fiber',category:'Material'},{id:'denim',label:'Denim',category:'Material'},{id:'leather',label:'Leather Grain',category:'Material'},{id:'canvas',label:'Canvas',category:'Material'}
 ]
-export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2174aa','#ffffff','#103b5e']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='neonLeopard'?['#0b0b0b','#39ff14','#f000ff']:id==='rainbowLeopard'?['#ffc37d','#f000ff','#00b5ff']:id==='whiteLeopard'?['#ffffff','#171717','#b9b9b9']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
+export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='neonLeopard'?['#0b0b0b','#39ff14','#f000ff']:id==='rainbowLeopard'?['#ffc37d','#f000ff','#00b5ff']:id==='whiteLeopard'?['#ffffff','#171717','#b9b9b9']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
 
 /** Deterministic vector artwork. Canvas transforms are applied before drawing so
  * thumbnails and shoe maps use the exact same artwork and user colors. */
@@ -135,4 +135,31 @@ export function makePatternCanvas(p:RegionPattern,size=512):HTMLCanvasElement{
  }
  c.restore();return canvas
 }
-export function makePatternTexture(p:RegionPattern){const t=new THREE.CanvasTexture(makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
+/** Recolor the actual bandana PNG rather than synthesizing paisley shapes.
+ * The source is blue/white: light pixels become ink, dark blue pixels become bg.
+ * Draw on a full-coverage square canvas so the selected mesh gets a complete map.
+ */
+function bandanaCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=size
+ const c=canvas.getContext('2d')!
+ const source=document.createElement('canvas');source.width=image.naturalWidth;source.height=image.naturalHeight
+ const sc=source.getContext('2d')!;sc.drawImage(image,0,0)
+ const pixels=sc.getImageData(0,0,source.width,source.height)
+ const parse=(hex:string)=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16))
+ const bg=parse(p.colors[0]),ink=parse(p.colors[1])
+ for(let i=0;i<pixels.data.length;i+=4){
+  const r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2]
+  const brightness=Math.max(0,Math.min(1,((r+g+b)/3-70)/175))
+  const mix=Math.pow(brightness,1.25)
+  for(let ch=0;ch<3;ch++)pixels.data[i+ch]=Math.round(bg[ch]*(1-mix)+ink[ch]*mix)
+ }
+ sc.putImageData(pixels,0,0)
+ c.fillStyle=p.colors[0];c.fillRect(0,0,size,size)
+ c.save();c.translate(size/2,size/2);c.rotate(p.rotation*Math.PI/180)
+ const scale=Math.max(.15,Math.min(4,p.scale)),tile=size/scale
+ const dx=p.offsetX*size/8,dy=p.offsetY*size/8
+ // Overscan corners during rotation; fill the entire selected mesh UV space.
+ for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
+ c.restore();return canvas
+}
+export function makePatternTexture(p:RegionPattern,bandanaImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&bandanaImage?bandanaCanvas(p,bandanaImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
