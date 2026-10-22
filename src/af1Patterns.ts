@@ -68,7 +68,7 @@ export function makePatternCanvas(p:RegionPattern,size=512):HTMLCanvasElement{
   for(let x=from;x<to;x+=unit){c.fillStyle=ink;c.fillRect(x,from,unit*.48,to-from)}
  }else if(id==='polka'){
   for(let j=-24;j<35;j++)for(let i=-24;i<35;i++){c.beginPath();c.arc(i*unit+(j%2)*unit*.5,j*unit,unit*.2,0,Math.PI*2);c.fillStyle=ink;c.fill()}
- }else if(id==='ggSupreme'||id==='monogram'){
+ }else if(id==='ggSupreme'){
   // Original interlocking-ring motif; not a copy of any trademarked logo.
   for(let j=-20;j<30;j++)for(let i=-20;i<30;i++){const x=i*unit*1.1+(j%2)*unit*.55,y=j*unit*.9;c.save();c.translate(x,y);c.strokeStyle=ink;c.lineWidth=unit*.075
    for(const dx of [-unit*.16,unit*.16]){c.beginPath();c.arc(dx,0,unit*.23,.35,Math.PI*1.8);c.stroke()}
@@ -119,14 +119,14 @@ export function makePatternCanvas(p:RegionPattern,size=512):HTMLCanvasElement{
    // Delicate dotted border between large motifs.
    for(let k=0;k<6;k++){c.beginPath();c.arc(x+step*.17+k*step*.07,y+step*.82+Math.sin(k*.8)*unit*.06,unit*.035,0,Math.PI*2);c.fillStyle=ink;c.fill()}
   }
- }else if(id==='splatter'||id==='graffiti'){
+ }else if(id==='splatter'){
   for(let i=0;i<420;i++){const x=rand(i,1)*size*3-size,y=rand(i,2)*size*3-size,r=unit*(.015+Math.pow(rand(i,3),5)*.24);c.fillStyle=i%3===0?ink:accent;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()
    if(i%17===0){c.strokeStyle=c.fillStyle;c.lineWidth=r*.3;c.beginPath();c.moveTo(x-r*2,y-r*3);c.lineTo(x+r*3,y+r*2);c.stroke()}}
  }else if(id==='marble'){
   for(let i=-20;i<35;i++){c.beginPath();for(let j=0;j<=100;j++){const y=from+j*(to-from)/100,x=i*unit*.4+Math.sin(y/unit*.75+i)*unit*.27+Math.sin(y/unit*1.8+i*.4)*unit*.08;j?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle=i%4===0?accent:ink;c.lineWidth=unit*(i%4===0?.12:.025);c.stroke()}
  }else if(id==='flames'){
   for(let i=-15;i<25;i++){const x=i*unit*.9,y=from;c.beginPath();c.moveTo(x-unit*.4,to);c.bezierCurveTo(x-unit*.5,size*.45,x+unit*.35,size*.6,x,size*.18);c.bezierCurveTo(x+unit*.7,size*.5,x+unit*.35,size*.65,x+unit*.5,to);c.closePath();c.fillStyle=i%2===0?ink:accent;c.fill()}
- }else if(id==='denim'||id==='canvas'){
+ }else if(id==='denim'){
   c.strokeStyle=ink;c.globalAlpha=.55;c.lineWidth=Math.max(1,unit*.035)
   for(let x=from;x<to;x+=unit*.12){c.beginPath();c.moveTo(x,from);c.lineTo(x,to);c.stroke()}
   c.strokeStyle=accent;for(let y=from;y<to;y+=unit*.12){c.beginPath();c.moveTo(from,y);c.lineTo(to,y);c.stroke()}c.globalAlpha=1
