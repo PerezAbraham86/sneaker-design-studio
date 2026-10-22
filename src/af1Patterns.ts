@@ -1,17 +1,17 @@
 import * as THREE from 'three'
 import type {AF1RegionId} from './af1Regions'
-export type PatternId='none'|'leopard'|'neonLeopard'|'rainbowLeopard'|'whiteLeopard'|'miniLeopard'|'tiger'|'zebra'|'cow'|'snakeskin'|'camo'|'desertCamo'|'urbanCamo'|'digitalCamo'|'fallCamoWoodland'|'fallCamoLeaves'|'checker'|'plaid'|'houndstooth'|'stripes'|'polka'|'bandana'|'ggSupreme'|'monogram'|'splatter'|'splatterBW'|'splatterBlue'|'graffiti'|'marble'|'flames'|'carbon'|'denim'|'leather'|'canvas'
+export type PatternId='none'|'leopard'|'tiger'|'zebra'|'cow'|'snakeskin'|'camo'|'desertCamo'|'urbanCamo'|'digitalCamo'|'fallCamoWoodland'|'fallCamoLeaves'|'checker'|'plaid'|'houndstooth'|'stripes'|'polka'|'bandana'|'ggSupreme'|'monogram'|'splatter'|'splatterBW'|'splatterBlue'|'graffiti'|'marble'|'flames'|'carbon'|'denim'|'leather'|'canvas'
 export type RegionPattern={id:PatternId;colors:[string,string,string];scale:number;rotation:number;offsetX:number;offsetY:number}
 export type PatternMap=Partial<Record<AF1RegionId,RegionPattern>>
 export const PATTERNS:{id:PatternId;label:string;category:string}[]=[
-{id:'leopard',label:'Leopard',category:'Animal'},{id:'neonLeopard',label:'Neon Leopard',category:'Animal'},{id:'rainbowLeopard',label:'Rainbow Leopard',category:'Animal'},{id:'whiteLeopard',label:'White Leopard',category:'Animal'},{id:'miniLeopard',label:'Mini Leopard',category:'Animal'},{id:'tiger',label:'Tiger',category:'Animal'},{id:'zebra',label:'Zebra',category:'Animal'},{id:'cow',label:'Cow Print',category:'Animal'},{id:'snakeskin',label:'Snakeskin',category:'Animal'},
+{id:'leopard',label:'Leopard',category:'Animal'},{id:'tiger',label:'Tiger',category:'Animal'},{id:'zebra',label:'Zebra',category:'Animal'},{id:'cow',label:'Cow Print',category:'Animal'},{id:'snakeskin',label:'Snakeskin',category:'Animal'},
 {id:'camo',label:'Woodland Camo',category:'Camouflage'},{id:'desertCamo',label:'Desert Camo',category:'Camouflage'},{id:'urbanCamo',label:'Urban Camo',category:'Camouflage'},{id:'digitalCamo',label:'Digital Camo',category:'Camouflage'},{id:'fallCamoWoodland',label:'Fall Camo Woodland',category:'Camouflage'},{id:'fallCamoLeaves',label:'Fall Camo Leaves',category:'Camouflage'},
 {id:'checker',label:'Checkerboard',category:'Geometric'},{id:'plaid',label:'Plaid',category:'Geometric'},{id:'houndstooth',label:'Houndstooth',category:'Geometric'},{id:'stripes',label:'Stripes',category:'Geometric'},{id:'polka',label:'Polka Dots',category:'Geometric'},
 {id:'bandana',label:'Bandana Paisley',category:'Designer Inspired'},{id:'ggSupreme',label:'GG Supreme (inspired)',category:'Designer Inspired'},{id:'monogram',label:'Luxury Monogram',category:'Designer Inspired'},
 {id:'splatter',label:'Colorful Splatter',category:'Artistic'},{id:'splatterBW',label:'Black & White Splatter',category:'Artistic'},{id:'splatterBlue',label:'Blue Splatter',category:'Artistic'},{id:'graffiti',label:'Graffiti',category:'Artistic'},{id:'marble',label:'Marble',category:'Artistic'},{id:'flames',label:'Flames',category:'Artistic'},
 {id:'carbon',label:'Carbon Fiber',category:'Material'},{id:'denim',label:'Denim',category:'Material'},{id:'leather',label:'Leather Grain',category:'Material'},{id:'canvas',label:'Canvas',category:'Material'}
 ]
-export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='digitalCamo'?['#f0e4ba','#267447','#262323']:id==='leopard'?['#c49b60','#1c2018','#79583c']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatterBW'?['#ffffff','#000000','#888888']:id==='splatterBlue'?['#ffffff','#0066cc','#62c5fa']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='neonLeopard'?['#0b0b0b','#39ff14','#f000ff']:id==='rainbowLeopard'?['#ffc37d','#f000ff','#00b5ff']:id==='whiteLeopard'?['#ffffff','#171717','#b9b9b9']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
+export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='digitalCamo'?['#f0e4ba','#267447','#262323']:id==='leopard'?['#c49b60','#1c2018','#79583c']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatterBW'?['#ffffff','#000000','#888888']:id==='splatterBlue'?['#ffffff','#0066cc','#62c5fa']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
 
 /** Deterministic vector artwork. Canvas transforms are applied before drawing so
  * thumbnails and shoe maps use the exact same artwork and user colors. */
@@ -32,8 +32,8 @@ export function makePatternCanvas(p:RegionPattern,size=512):HTMLCanvasElement{
  const id=p.id
  // Overscan rotated corners and shifted pattern coordinates.
  const from=-size*2,to=size*3
- if(['leopard','neonLeopard','rainbowLeopard','whiteLeopard','miniLeopard'].includes(id)){
-  const step=unit*(id==='miniLeopard'?.55:1.15)
+ if(id==='leopard'){
+  const step=unit*(1.15)
   for(let j=-16;j<24;j++)for(let i=-16;i<24;i++){
    const x=i*step+(j%2)*step*.48+step*.4,y=j*step*.84+step*.4
    if(x<from||x>to||y<from||y>to)continue
