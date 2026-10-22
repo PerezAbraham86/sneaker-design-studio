@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type {AF1RegionId} from './af1Regions'
-export type PatternId='none'|'leopard'|'tiger'|'zebra'|'cow'|'snakeskin'|'greenSnakeskin'|'camo'|'desertCamo'|'urbanCamo'|'digitalCamo'|'fallCamoWoodland'|'fallCamoLeaves'|'checker'|'plaid'|'stripes'|'polka'|'bandana'|'ggSupreme'|'lvMonogram'|'splatter'|'splatterBW'|'splatterBlue'|'carbon'|'denim'
+export type PatternId='none'|'leopard'|'tiger'|'zebra'|'cow'|'snakeskin'|'greenSnakeskin'|'camo'|'desertCamo'|'urbanCamo'|'digitalCamo'|'fallCamoWoodland'|'fallCamoLeaves'|'checker'|'plaid'|'stripes'|'polka'|'bandana'|'ggSupreme'|'lvMonogram'|'splatter'|'splatterBW'|'splatterBlue'|'denim'
 export type RegionPattern={id:PatternId;colors:[string,string,string];scale:number;rotation:number;offsetX:number;offsetY:number}
 export type PatternMap=Partial<Record<AF1RegionId,RegionPattern>>
 export const PATTERNS:{id:PatternId;label:string;category:string}[]=[
@@ -9,9 +9,9 @@ export const PATTERNS:{id:PatternId;label:string;category:string}[]=[
 {id:'checker',label:'Checkerboard',category:'Geometric'},{id:'plaid',label:'Plaid',category:'Geometric'},{id:'stripes',label:'Stripes',category:'Geometric'},{id:'polka',label:'Polka Dots',category:'Geometric'},
 {id:'lvMonogram',label:'LV Monogram (inspired)',category:'Designer Inspired'},{id:'bandana',label:'Bandana Paisley',category:'Designer Inspired'},{id:'ggSupreme',label:'GG Supreme (inspired)',category:'Designer Inspired'},
 {id:'splatter',label:'Colorful Splatter',category:'Artistic'},{id:'splatterBW',label:'Black & White Splatter',category:'Artistic'},{id:'splatterBlue',label:'Blue Splatter',category:'Artistic'},
-{id:'carbon',label:'Carbon Fiber',category:'Material'},{id:'denim',label:'Denim',category:'Material'}
+{id:'denim',label:'Denim',category:'Material'}
 ]
-export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='lvMonogram'?['#42271b','#bb8a45','#8b632f']:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='digitalCamo'?['#f0e4ba','#267447','#262323']:id==='leopard'?['#c49b60','#1c2018','#79583c']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatterBW'?['#ffffff','#000000','#888888']:id==='splatterBlue'?['#ffffff','#0066cc','#62c5fa']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:id==='carbon'?['#171b20','#333a42','#101318']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
+export const defaultPattern=(id:PatternId):RegionPattern=>({id,colors:id==='lvMonogram'?['#42271b','#bb8a45','#8b632f']:id==='ggSupreme'?['#b7a080','#51412f','#85715b']:id==='bandana'?['#2850a4','#ffffff','#ffffff']:id==='digitalCamo'?['#f0e4ba','#267447','#262323']:id==='leopard'?['#c49b60','#1c2018','#79583c']:id==='camo'?['#6a7651','#273c31','#a8a17a']:id==='splatterBW'?['#ffffff','#000000','#888888']:id==='splatterBlue'?['#ffffff','#0066cc','#62c5fa']:id==='splatter'?['#ffffff','#2769dc','#ffcb19']:id==='urbanCamo'?['#aeb3ba','#303844','#6b7582']:id==='desertCamo'?['#dfc6a0','#7b553a','#b99467']:id==='tiger'?['#d88735','#1a100c','#fff0c7']:id==='zebra'?['#ffffff','#171717','#aaaaaa']:id==='cow'?['#ffffff','#171717','#a0a0a0']:id==='denim'?['#304e7d','#92a5c5','#5876a2']:['#f3e4ce','#211913','#ab7951'],scale:1,rotation:0,offsetX:0,offsetY:0})
 
 /** Deterministic vector artwork. Canvas transforms are applied before drawing so
  * thumbnails and shoe maps use the exact same artwork and user colors. */
@@ -57,8 +57,8 @@ export function makePatternCanvas(p:RegionPattern,size=512):HTMLCanvasElement{
    if(id==='digitalCamo'){c.fillStyle=fill;for(let k=0;k<7;k++)c.fillRect(x+Math.floor(rand(i,j,k)*5)*unit*.14,y+Math.floor(rand(j,i,k)*5)*unit*.14,unit*.19,unit*.19)}
    else blob(x,y,unit*(.4+rand(i,j,5)*.35),unit*(.2+rand(i,j,6)*.2),i*11+j,fill)
   }
- }else if(id==='checker'||id==='carbon'){
-  for(let j=-20;j<30;j++)for(let i=-20;i<30;i++){const u=unit*.6,x=i*u,y=j*u;c.fillStyle=(i+j)%2===0?ink:accent;c.fillRect(x,y,u,u);if(id==='carbon'){c.fillStyle='rgba(255,255,255,.18)';c.fillRect(x+u*.1,y+u*.1,u*.7,u*.13)}}
+ }else if(id==='checker'){
+  for(let j=-20;j<30;j++)for(let i=-20;i<30;i++){const u=unit*.6,x=i*u,y=j*u;c.fillStyle=(i+j)%2===0?ink:accent;c.fillRect(x,y,u,u);}
  }else if(id==='plaid'){
   for(let x=from;x<to;x+=unit*2){c.fillStyle=ink;c.fillRect(x,from,unit*.55,to-from);c.fillStyle=accent;c.fillRect(x+unit*.18,from,unit*.12,to-from)}
   for(let y=from;y<to;y+=unit*2){c.fillStyle=ink;c.globalAlpha=.7;c.fillRect(from,y,to-from,unit*.55);c.globalAlpha=1;c.fillStyle=accent;c.fillRect(from,y+unit*.18,to-from,unit*.12)}
@@ -266,4 +266,4 @@ function fallCamoImageCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
  for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
  c.restore();return canvas
 }
-export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):p.id==='ggSupreme'&&patternImage?ggImageCanvas(p,patternImage):['splatter','splatterBW','splatterBlue'].includes(p.id)&&patternImage?splatterImageCanvas(p,patternImage):['camo','desertCamo','urbanCamo','fallCamoWoodland','fallCamoLeaves','tiger','zebra','cow','snakeskin','greenSnakeskin','plaid','lvMonogram'].includes(p.id)&&patternImage?fallCamoImageCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
+export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):p.id==='ggSupreme'&&patternImage?ggImageCanvas(p,patternImage):['splatter','splatterBW','splatterBlue'].includes(p.id)&&patternImage?splatterImageCanvas(p,patternImage):['camo','desertCamo','urbanCamo','fallCamoWoodland','fallCamoLeaves','tiger','zebra','cow','snakeskin','greenSnakeskin','plaid','lvMonogram','denim'].includes(p.id)&&patternImage?fallCamoImageCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
