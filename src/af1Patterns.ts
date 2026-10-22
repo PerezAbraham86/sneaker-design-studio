@@ -62,8 +62,6 @@ export function makePatternCanvas(p:RegionPattern,size=512):HTMLCanvasElement{
  }else if(id==='plaid'){
   for(let x=from;x<to;x+=unit*2){c.fillStyle=ink;c.fillRect(x,from,unit*.55,to-from);c.fillStyle=accent;c.fillRect(x+unit*.18,from,unit*.12,to-from)}
   for(let y=from;y<to;y+=unit*2){c.fillStyle=ink;c.globalAlpha=.7;c.fillRect(from,y,to-from,unit*.55);c.globalAlpha=1;c.fillStyle=accent;c.fillRect(from,y+unit*.18,to-from,unit*.12)}
- }else if(id==='houndstooth'){
-  for(let j=-22;j<30;j++)for(let i=-22;i<30;i++){if((i+j)%2!==0)continue;const x=i*unit*.8,y=j*unit*.8,u=unit*.8;path([x,y,x+u*.7,y,x+u*.7,y+u*.25,x+u,y+u*.25,x+u,y+u*.45,x+u*.65,y+u*.45,x+u*.45,y+u,x+u*.25,y+u,x+u*.25,y+u*.7,x,y+u*.7],ink)}
  }else if(id==='stripes'){
   for(let x=from;x<to;x+=unit){c.fillStyle=ink;c.fillRect(x,from,unit*.48,to-from)}
  }else if(id==='polka'){
@@ -122,16 +120,11 @@ export function makePatternCanvas(p:RegionPattern,size=512):HTMLCanvasElement{
  }else if(id==='splatter'){
   for(let i=0;i<420;i++){const x=rand(i,1)*size*3-size,y=rand(i,2)*size*3-size,r=unit*(.015+Math.pow(rand(i,3),5)*.24);c.fillStyle=i%3===0?ink:accent;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()
    if(i%17===0){c.strokeStyle=c.fillStyle;c.lineWidth=r*.3;c.beginPath();c.moveTo(x-r*2,y-r*3);c.lineTo(x+r*3,y+r*2);c.stroke()}}
- }else if(id==='marble'){
-  for(let i=-20;i<35;i++){c.beginPath();for(let j=0;j<=100;j++){const y=from+j*(to-from)/100,x=i*unit*.4+Math.sin(y/unit*.75+i)*unit*.27+Math.sin(y/unit*1.8+i*.4)*unit*.08;j?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle=i%4===0?accent:ink;c.lineWidth=unit*(i%4===0?.12:.025);c.stroke()}
- }else if(id==='flames'){
-  for(let i=-15;i<25;i++){const x=i*unit*.9,y=from;c.beginPath();c.moveTo(x-unit*.4,to);c.bezierCurveTo(x-unit*.5,size*.45,x+unit*.35,size*.6,x,size*.18);c.bezierCurveTo(x+unit*.7,size*.5,x+unit*.35,size*.65,x+unit*.5,to);c.closePath();c.fillStyle=i%2===0?ink:accent;c.fill()}
  }else if(id==='denim'){
   c.strokeStyle=ink;c.globalAlpha=.55;c.lineWidth=Math.max(1,unit*.035)
   for(let x=from;x<to;x+=unit*.12){c.beginPath();c.moveTo(x,from);c.lineTo(x,to);c.stroke()}
   c.strokeStyle=accent;for(let y=from;y<to;y+=unit*.12){c.beginPath();c.moveTo(from,y);c.lineTo(to,y);c.stroke()}c.globalAlpha=1
- }else if(id==='leather'){
-  for(let j=-30;j<50;j++)for(let i=-30;i<50;i++){const x=i*unit*.32+rand(i,j)*unit*.14,y=j*unit*.32;c.beginPath();c.ellipse(x,y,unit*.08,unit*.04,rand(i,j,2)*6,0,Math.PI*2);c.fillStyle=rand(i,j,3)>.5?ink:accent;c.globalAlpha=.23;c.fill()}c.globalAlpha=1
+
  }
  c.restore();return canvas
 }
