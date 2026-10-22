@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 import type {AF1RegionId} from './af1Regions'
-export type PatternId='none'|'leopard'|'neonLeopard'|'rainbowLeopard'|'whiteLeopard'|'miniLeopard'|'tiger'|'zebra'|'cow'|'snakeskin'|'camo'|'desertCamo'|'urbanCamo'|'digitalCamo'|'checker'|'plaid'|'houndstooth'|'stripes'|'polka'|'bandana'|'ggSupreme'|'monogram'|'splatter'|'splatterBW'|'splatterBlue'|'graffiti'|'marble'|'flames'|'carbon'|'denim'|'leather'|'canvas'
+export type PatternId='none'|'leopard'|'neonLeopard'|'rainbowLeopard'|'whiteLeopard'|'miniLeopard'|'tiger'|'zebra'|'cow'|'snakeskin'|'camo'|'desertCamo'|'urbanCamo'|'digitalCamo'|'fallCamoWoodland'|'fallCamoLeaves'|'checker'|'plaid'|'houndstooth'|'stripes'|'polka'|'bandana'|'ggSupreme'|'monogram'|'splatter'|'splatterBW'|'splatterBlue'|'graffiti'|'marble'|'flames'|'carbon'|'denim'|'leather'|'canvas'
 export type RegionPattern={id:PatternId;colors:[string,string,string];scale:number;rotation:number;offsetX:number;offsetY:number}
 export type PatternMap=Partial<Record<AF1RegionId,RegionPattern>>
 export const PATTERNS:{id:PatternId;label:string;category:string}[]=[
 {id:'leopard',label:'Leopard',category:'Animal'},{id:'neonLeopard',label:'Neon Leopard',category:'Animal'},{id:'rainbowLeopard',label:'Rainbow Leopard',category:'Animal'},{id:'whiteLeopard',label:'White Leopard',category:'Animal'},{id:'miniLeopard',label:'Mini Leopard',category:'Animal'},{id:'tiger',label:'Tiger',category:'Animal'},{id:'zebra',label:'Zebra',category:'Animal'},{id:'cow',label:'Cow Print',category:'Animal'},{id:'snakeskin',label:'Snakeskin',category:'Animal'},
-{id:'camo',label:'Woodland Camo',category:'Camouflage'},{id:'desertCamo',label:'Desert Camo',category:'Camouflage'},{id:'urbanCamo',label:'Urban Camo',category:'Camouflage'},{id:'digitalCamo',label:'Digital Camo',category:'Camouflage'},
+{id:'camo',label:'Woodland Camo',category:'Camouflage'},{id:'desertCamo',label:'Desert Camo',category:'Camouflage'},{id:'urbanCamo',label:'Urban Camo',category:'Camouflage'},{id:'digitalCamo',label:'Digital Camo',category:'Camouflage'},{id:'fallCamoWoodland',label:'Fall Camo Woodland',category:'Camouflage'},{id:'fallCamoLeaves',label:'Fall Camo Leaves',category:'Camouflage'},
 {id:'checker',label:'Checkerboard',category:'Geometric'},{id:'plaid',label:'Plaid',category:'Geometric'},{id:'houndstooth',label:'Houndstooth',category:'Geometric'},{id:'stripes',label:'Stripes',category:'Geometric'},{id:'polka',label:'Polka Dots',category:'Geometric'},
 {id:'bandana',label:'Bandana Paisley',category:'Designer Inspired'},{id:'ggSupreme',label:'GG Supreme (inspired)',category:'Designer Inspired'},{id:'monogram',label:'Luxury Monogram',category:'Designer Inspired'},
 {id:'splatter',label:'Colorful Splatter',category:'Artistic'},{id:'splatterBW',label:'Black & White Splatter',category:'Artistic'},{id:'splatterBlue',label:'Blue Splatter',category:'Artistic'},{id:'graffiti',label:'Graffiti',category:'Artistic'},{id:'marble',label:'Marble',category:'Artistic'},{id:'flames',label:'Flames',category:'Artistic'},
@@ -260,4 +260,17 @@ function splatterImageCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
  for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
  c.restore();return canvas
 }
-export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):p.id==='ggSupreme'&&patternImage?ggImageCanvas(p,patternImage):['splatter','splatterBW','splatterBlue'].includes(p.id)&&patternImage?splatterImageCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
+function fallCamoImageCanvas(p:RegionPattern,image:HTMLImageElement,size=1024){
+ const source=document.createElement('canvas');source.width=source.height=size
+ const sc=source.getContext('2d')!
+ const side=Math.min(image.naturalWidth,image.naturalHeight)
+ sc.drawImage(image,(image.naturalWidth-side)/2,(image.naturalHeight-side)/2,side,side,0,0,size,size)
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=size
+ const c=canvas.getContext('2d')!;c.fillStyle=p.colors[0];c.fillRect(0,0,size,size)
+ c.save();c.translate(size/2,size/2);c.rotate(p.rotation*Math.PI/180)
+ const tile=size/Math.max(.15,Math.min(4,p.scale))
+ const dx=p.offsetX*size/8,dy=p.offsetY*size/8
+ for(let y=-size*2-tile+dy;y<size*2+tile;y+=tile)for(let x=-size*2-tile+dx;x<size*2+tile;x+=tile)c.drawImage(source,x,y,tile,tile)
+ c.restore();return canvas
+}
+export function makePatternTexture(p:RegionPattern,patternImage?:HTMLImageElement|null){const t=new THREE.CanvasTexture(p.id==='bandana'&&patternImage?bandanaCanvas(p,patternImage):p.id==='digitalCamo'&&patternImage?digitalCamoCanvas(p,patternImage):p.id==='leopard'&&patternImage?leopardCanvas(p,patternImage):p.id==='ggSupreme'&&patternImage?ggImageCanvas(p,patternImage):['splatter','splatterBW','splatterBlue'].includes(p.id)&&patternImage?splatterImageCanvas(p,patternImage):['fallCamoWoodland','fallCamoLeaves'].includes(p.id)&&patternImage?fallCamoImageCanvas(p,patternImage):makePatternCanvas(p));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t}
